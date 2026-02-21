@@ -2,10 +2,19 @@ package com.example.bantaycampus01.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+//Backgrounds
+val DarkGrayBlue = Color(0xFF2A364E)
+val White = Color(0xFFFFFFFF)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+//Text
+val TextOnWhite = DarkGrayBlue
+val TextOnDark = White
+val SubTextLabel = Color(0xFF8F8E8E)
+
+//Textbox
+val TextBoxBg = Color(0xFFE5E5E5)
+val TextBoxText = Color(0xFF4D4C4C)
+val TextBoxPlaceholder = Color(0xFF4D4C4C)
+
+//Pop-up
+val PopUpButton = Color(0xFF506285)

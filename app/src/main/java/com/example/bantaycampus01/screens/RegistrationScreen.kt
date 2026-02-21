@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Label
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -99,6 +101,18 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
                 .height(210.dp)
                 .background(headerColor)
         ) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .padding(start = 12.dp, top = 16.dp)
+                    .size(44.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = White
+                )
+            }
         }
 
         // ✅ Scrollable content
@@ -126,77 +140,53 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
             Spacer(modifier = Modifier.height(16.dp))
 
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
+            SoftField(
                 value = name,
                 onValueChange = { name = it },
-
-                placeholder = {
-                    Text("Name")
-                },
-
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text
-                )
+                placeholder = "Name",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Text,
+                isPassword = false,
+                showPassword = true
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
+            SoftField(
                 value = email,
-                onValueChange = {email = it},
-
-                placeholder = {
-                    Text("Email")
-                },
-
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text
-                )
+                onValueChange = { email = it },
+                placeholder = "Email",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Email,
+                isPassword = false,
+                showPassword = true
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
+            SoftField(
                 value = password,
-                onValueChange = {password = it},
-
-                placeholder = {
-                    Text("Password")
-                },
-
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
-                ),
-
-                visualTransformation =
-                    if (showPassword)
-                        VisualTransformation.None
-                    else
-                        PasswordVisualTransformation()
+                onValueChange = { password = it },
+                placeholder = "Password",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Password,
+                isPassword = true,
+                showPassword = showPassword
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
+            SoftField(
                 value = confirmPassword,
-                onValueChange = { confirmPassword = it},
-
-                placeholder = {
-                    Text("Confirm Password")
-                },
-
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password
-                ),
-
-                visualTransformation =
-                    if (showPassword)
-                        VisualTransformation.None
-                    else
-                        PasswordVisualTransformation()
+                onValueChange = { confirmPassword = it },
+                placeholder = "Confirm Password",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Password,
+                isPassword = true,
+                showPassword = showPassword
             )
 
             Row(
@@ -247,7 +237,10 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
             Spacer(modifier = Modifier.height(18.dp))
 
             Button(
-                onClick = {},
+                onClick = {
+                    onSignUp(name, email, password, dob)
+                    onRegisterSuccess()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -275,10 +268,61 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
                     fontSize = 12.sp,
                     color = TextOnWhite,
                     textDecoration = TextDecoration.Underline,
+                    modifier = Modifier.clickable { onLoginClick() }
                 )
             }
 
+            // ✅ extra space so last line is never cramped
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
+}
+
+@Composable
+private fun Label(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth(),
+        fontSize = 11.sp,
+        letterSpacing = 1.sp,
+        color = SubTextLabel
+    )
+}
+
+@Composable
+private fun SoftField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    bg: Color,
+    keyboardType: KeyboardType,
+    isPassword: Boolean,
+    showPassword: Boolean
+) {
+    val transformation =
+        if (isPassword && !showPassword) PasswordVisualTransformation() else VisualTransformation.None
+
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        placeholder = { Text(placeholder, fontSize = 13.sp, color = TextBoxPlaceholder) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = transformation,
+        shape = RoundedCornerShape(14.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = bg,
+            unfocusedContainerColor = bg,
+            disabledContainerColor = bg,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+            cursorColor = DarkGrayBlue,
+            focusedTextColor = TextBoxText,
+            unfocusedTextColor = TextBoxText
+        )
+    )
 }

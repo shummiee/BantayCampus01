@@ -12,7 +12,7 @@ import com.example.bantaycampus01.screens.RegistrationScreen
 fun AppNavigation(modifier: Modifier = Modifier){
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "Login_Screen"){
+    NavHost(navController = navController, startDestination = "Registration_Screen"){
         composable("Login_Screen"){
             LoginScreen(modifier)
         }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "120199626045",
+    "project_id": "bantaycampus",
+    "storage_bucket": "bantaycampus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:120199626045:android:d27b9f3f652697fc521954",
+        "android_client_info": {
+          "package_name": "com.example.bantaycampus01"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCe6uyzayGbg4QfOpS-sEbKEaI1LhVNu9g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

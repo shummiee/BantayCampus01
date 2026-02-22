@@ -48,6 +48,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.SubTextLabel
 import com.example.bantaycampus01.ui.theme.TextBoxBg
@@ -56,10 +58,11 @@ import com.example.bantaycampus01.ui.theme.TextBoxText
 import com.example.bantaycampus01.ui.theme.TextOnDark
 import com.example.bantaycampus01.ui.theme.TextOnWhite
 import com.example.bantaycampus01.ui.theme.White
+import com.example.bantaycampus01.viewmodel.AuthViewModel
 import java.util.Calendar
 
 @Composable
-fun RegistrationScreen(modifier: Modifier = Modifier){
+fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel = viewModel()){
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
 
@@ -102,7 +105,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
                 .background(headerColor)
         ) {
             IconButton(
-                onClick = onBack,
+                onClick = {  },
                 modifier = Modifier
                     .padding(start = 12.dp, top = 16.dp)
                     .size(44.dp)
@@ -238,8 +241,14 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
 
             Button(
                 onClick = {
-                    onSignUp(name, email, password, dob)
-                    onRegisterSuccess()
+                    authViewModel.register(email, name, password){
+                        success,errorMessage->
+                        if(success) {
+
+                        }else{
+                            AppUtil.showToast(context,errorMessage?:"Something went wrong")
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -268,7 +277,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier){
                     fontSize = 12.sp,
                     color = TextOnWhite,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { onLoginClick() }
+                    modifier = Modifier.clickable { }
                 )
             }
 

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.bantaycampus01.R
 import com.example.bantaycampus01.screens.User.MainMenu
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.SubTextLabel
@@ -50,7 +51,6 @@ import com.example.bantaycampus01.ui.theme.TextBoxText
 import com.example.bantaycampus01.ui.theme.TextOnDark
 import com.example.bantaycampus01.ui.theme.TextOnWhite
 import com.example.bantaycampus01.ui.theme.White
-import androidx.compose.material3.R
 
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier){
@@ -175,11 +175,9 @@ fun LoginScreen(modifier: Modifier = Modifier){
 
                     when {
                         e == demoAdminEmail && password == demoAdminPass -> {
-                            MainMenu(modifier = Modifier)
                         }
 
                         e == demoUserEmail && password == demoUserPass -> {
-                            MainMenu(modifier = Modifier)
                         }
 
                         else -> {
@@ -202,7 +200,7 @@ fun LoginScreen(modifier: Modifier = Modifier){
 
             Spacer(modifier = Modifier.height(1.dp))
 
-            TextButton(onClick = {onRegisterClick()}) {
+            TextButton(onClick = { }) {
                 Text("Register Here", fontSize = 14.sp, color = SubTextLabel, textDecoration = TextDecoration.Underline)
             }
         }

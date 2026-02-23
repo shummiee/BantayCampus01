@@ -174,6 +174,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
                             navController.navigate("MainMenu_Screen"){
                                 popUpTo("Registration_Screen"){inclusive=true}
                             }
+                        //**************************HARD CODED ADMIN LOGIN CREDENTIALS****************************//
                         }else if(email == "admin" && password == "admin"){
                             isLoading = false
                             navController.navigate("AdminHomepage_Screen"){

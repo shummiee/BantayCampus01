@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.SubTextLabel
@@ -62,7 +63,7 @@ import com.example.bantaycampus01.viewmodel.AuthViewModel
 import java.util.Calendar
 
 @Composable
-fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewModel = viewModel()){
+fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavController,authViewModel: AuthViewModel = viewModel()){
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
 
@@ -74,6 +75,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewMod
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var dob by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
@@ -105,7 +107,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewMod
                 .background(headerColor)
         ) {
             IconButton(
-                onClick = {  },
+                onClick = { navController.navigate("Login_Screen") },
                 modifier = Modifier
                     .padding(start = 12.dp, top = 16.dp)
                     .size(44.dp)
@@ -241,15 +243,22 @@ fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewMod
 
             Button(
                 onClick = {
+                    isLoading = true
                     authViewModel.register(email, name, password){
                         success,errorMessage->
                         if(success) {
+                            isLoading = false
+                            navController.navigate("Login_Screen"){
+                                popUpTo("Registration_Screen"){inclusive=true}
+                            }
 
                         }else{
+                            isLoading = false
                             AppUtil.showToast(context,errorMessage?:"Something went wrong")
                         }
                     }
                 },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -257,6 +266,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewMod
                 colors = ButtonDefaults.buttonColors(containerColor = headerColor)
             ) {
                 Text(
+                    text = if(isLoading) "Creating Account" else
                     "SIGN UP",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
@@ -277,7 +287,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, authViewModel: AuthViewMod
                     fontSize = 12.sp,
                     color = TextOnWhite,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { }
+                    modifier = Modifier.clickable { navController.navigate("Login_Screen")}
                 )
             }
 

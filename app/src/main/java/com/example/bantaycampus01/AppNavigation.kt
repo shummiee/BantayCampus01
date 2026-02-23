@@ -13,12 +13,12 @@ fun AppNavigation(modifier: Modifier = Modifier){
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "Registration_Screen"){
-        composable("Login_Screen"){
-            LoginScreen(modifier)
-        }
 
+        composable("Login_Screen"){
+            LoginScreen(modifier, navController)
+        }
         composable("Registration_Screen"){
-            RegistrationScreen(modifier)
+            RegistrationScreen(modifier, navController)
         }
     }
 }

@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,7 +42,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.screens.User.MainMenu
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
@@ -52,9 +55,10 @@ import com.example.bantaycampus01.ui.theme.TextBoxText
 import com.example.bantaycampus01.ui.theme.TextOnDark
 import com.example.bantaycampus01.ui.theme.TextOnWhite
 import com.example.bantaycampus01.ui.theme.White
+import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavController){
+fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel = viewModel()){
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
 
@@ -62,14 +66,9 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController){
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    //Hardcoded user
-    val demoUserEmail = "user@mcm.edu.ph"
-    val demoUserPass = "user123"
-
-    //Hardcoded admin
-    val demoAdminEmail = "admin@mcm.edu.ph"
-    val demoAdminPass = "admin123"
+    val context = LocalContext.current
 
 
     Box(modifier = Modifier.fillMaxSize().background(White)) {
@@ -167,30 +166,30 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController){
 
             Button(
                 onClick = {
-                    if (email.isBlank() || password.isBlank()) {
-                        error = "Please enter email and password."
-                        return@Button
-                    }
+                    isLoading = true
+                    authViewModel.login(email, password){
+                            success,errorMessage->
+                        if(success) {
+                            isLoading = false
+                            navController.navigate("MainMenu_Screen"){
+                                popUpTo("Registration_Screen"){inclusive=true}
+                            }
 
-                    val e = email.trim()
-
-                    when {
-                        e == demoAdminEmail && password == demoAdminPass -> {
-                        }
-
-                        e == demoUserEmail && password == demoUserPass -> {
-                        }
-
-                        else -> {
-                            error = "Invalid email or password."
+                        }else{
+                            isLoading = false
+                            AppUtil.showToast(context,errorMessage?:"Something went wrong")
                         }
                     }
                 },
+                enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = headerColor)
             ) {
-                Text("Log in", color = TextOnDark, fontWeight = FontWeight.Bold)
+                Text( if(isLoading) "Logging In" else
+                    "Log in",
+                    color = TextOnDark,
+                    fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(10.dp))

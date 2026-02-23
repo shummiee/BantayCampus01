@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.bantaycampus01.screens.Admin.AdminHomePage
 import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
 import com.example.bantaycampus01.screens.User.MainMenu
@@ -28,6 +29,9 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("MainMenu_Screen") {
             MainMenu(modifier,navController)
+        }
+        composable("AdminHomePage_Screen") {
+            AdminHomePage(modifier,navController)
         }
     }
 }

@@ -172,7 +172,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
                         if(success) {
                             isLoading = false
                             navController.navigate("MainMenu_Screen"){
-                                popUpTo("Registration_Screen"){inclusive=true}
+                                popUpTo("Login_Screen"){inclusive=true}
                             }
                         //**************************HARD CODED ADMIN LOGIN CREDENTIALS****************************//
                         }else if(email == "admin" && password == "admin"){

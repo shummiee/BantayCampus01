@@ -12,16 +12,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 
 @Composable
 fun AdminNavBar(
-    onHome: () -> Unit = {},
-    onAlert: () -> Unit = {},
-    onIncoming: () -> Unit = {},
-    onSafety: () -> Unit = {},
-    onProfile: () -> Unit = {}
+    modifier: Modifier,
+    navController: NavController
 ) {
     Box(
         modifier = Modifier
@@ -39,14 +37,14 @@ fun AdminNavBar(
             BottomNavSlot(
                 res = R.drawable.home,
                 contentDescription = "Home",
-                onClick = onHome,
+                onClick = { navController.navigate("AdminHomePage_Screen") },
                 modifier = Modifier.weight(1f)
             )
 
             BottomNavSlot(
                 res = R.drawable.alert,
                 contentDescription = "Alert History",
-                onClick = onAlert,
+                onClick = { navController.navigate("AdminSafetyPage_Screen") },
                 modifier = Modifier.weight(1f)
             )
 
@@ -55,14 +53,14 @@ fun AdminNavBar(
             BottomNavSlot(
                 res = R.drawable.safety,
                 contentDescription = "Checklist",
-                onClick = onSafety,
+                onClick = { navController.navigate("AdminCheckinPage_Screen") },
                 modifier = Modifier.weight(1f)
             )
 
             BottomNavSlot(
                 res = R.drawable.profile,
                 contentDescription = "Profile",
-                onClick = onProfile,
+                onClick = {  },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -74,7 +72,9 @@ fun AdminNavBar(
                 .offset(y = (-18).dp)
                 .clip(CircleShape)
                 .background(Color(0xFFB50000))
-                .clickable { onIncoming() },
+                .clickable {
+                    navController.navigate("AdminAlertPage_Screen")
+                },
             contentAlignment = Alignment.Center
         ) {
             Image(

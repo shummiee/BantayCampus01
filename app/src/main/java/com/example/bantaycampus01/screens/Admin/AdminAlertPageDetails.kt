@@ -15,12 +15,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
 
 @Composable
-fun AdminAlertPageDetailsUI(
+fun AdminAlertPageDetails(
+    modifier: Modifier,
+    navController: NavController,
+
     adminName: String = "Admin",
     reportId: String = "Report ID: #BC-2026-0145",
     statusText: String = "RESOLVED",
@@ -209,11 +213,8 @@ fun AdminAlertPageDetailsUI(
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             AdminNavBar(
-                onHome = onHomeNav,
-                onAlert = onAlertNav,
-                onIncoming = onIncomingNav,
-                onSafety = onSafetyNav,
-                onProfile = onProfileNav
+                modifier = Modifier,
+                navController
             )
         }
     }

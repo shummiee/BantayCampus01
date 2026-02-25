@@ -25,6 +25,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
@@ -44,7 +46,10 @@ private enum class CampusRiskOpt(val label: String, val dot: Color) {
 }
 
 @Composable
-fun AdminAlertPageUI(
+fun AdminAlertPage(
+    modifier: Modifier,
+    navController: NavController,
+
     adminName: String = "Admin",
     onHomeNav: () -> Unit = {},
     onAlertNav: () -> Unit = {},
@@ -121,11 +126,8 @@ fun AdminAlertPageUI(
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             AdminNavBar(
-                onHome = onHomeNav,
-                onAlert = onAlertNav,
-                onIncoming = onIncomingNav,
-                onSafety = onSafetyNav,
-                onProfile = onProfileNav
+                modifier = Modifier,
+                navController
             )
         }
     }

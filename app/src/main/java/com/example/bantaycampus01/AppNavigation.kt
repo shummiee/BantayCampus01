@@ -11,7 +11,6 @@ import com.example.bantaycampus01.screens.Admin.AdminHomePage
 import com.example.bantaycampus01.screens.Admin.AdminSafetyPage
 import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
-import com.example.bantaycampus01.screens.User.MainMenu
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -29,9 +28,6 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("Registration_Screen"){
             RegistrationScreen(modifier, navController)
-        }
-        composable("MainMenu_Screen") {
-            MainMenu(modifier,navController)
         }
         composable("AdminHomePage_Screen") {
             AdminHomePage(modifier,navController)

@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.PopUpButton
 import com.example.bantaycampus01.ui.theme.SubTextLabel
@@ -73,6 +74,7 @@ enum class CampusRiskLevel(val label: String, val dotColor: Color) {
 fun AdminHomePage(
     modifier: Modifier,
     navController: NavController,
+
     adminName: String = "Admin",
     dateText: String = "February 3, 2026",
     alertsCount: Int = 8,
@@ -469,11 +471,8 @@ fun AdminHomePage(
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             AdminNavBar(
-                onHome = onHomeNav,
-                onAlert = onAlertNav,
-                onIncoming = onIncomingNav,
-                onSafety = onSafetyNav,
-                onProfile = onProfileNav
+                modifier = Modifier,
+                navController
             )
         }
 

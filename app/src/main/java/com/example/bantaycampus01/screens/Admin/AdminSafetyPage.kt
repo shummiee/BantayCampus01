@@ -23,22 +23,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
 
 @Composable
 fun AdminSafetyPage(
+    modifier: Modifier,
+    navController: NavController,
+
     adminName: String = "Admin",
 
     onGoToCheckInPage: () -> Unit = {},
 
-    onHomeNav: () -> Unit = {},
-    onAlertNav: () -> Unit = {},
-    onIncomingNav: () -> Unit = {},
-    onSafetyNav: () -> Unit = {},
-    onProfileNav: () -> Unit = {}
 ) {
+
     var showAdvisoryDialog by rememberSaveable { mutableStateOf(false) }
     var showCampusDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -87,13 +87,8 @@ fun AdminSafetyPage(
             tempCampusNote = campusMessage.trim('"')
             showCampusDialog = true
         },
-
-        // navbar
-        onHomeNav = onHomeNav,
-        onAlertNav = onAlertNav,
-        onIncomingNav = onIncomingNav,
-        onSafetyNav = onSafetyNav,
-        onProfileNav = onProfileNav
+        modifier = Modifier,
+        navController = navController
     )
 
     if (showAdvisoryDialog) {
@@ -377,6 +372,9 @@ fun AdminSafetyPage(
 
 @Composable
 fun AdminSafetyPageUI(
+    modifier: Modifier,
+    navController: NavController,
+
     adminName: String = "Admin",
 
     currentStatusText: String = "Current Status: ALL SAFE",
@@ -645,11 +643,8 @@ fun AdminSafetyPageUI(
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             AdminNavBar(
-                onHome = onHomeNav,
-                onAlert = onAlertNav,
-                onIncoming = onIncomingNav,
-                onSafety = onSafetyNav,
-                onProfile = onProfileNav
+                modifier = Modifier,
+                navController
             )
         }
     }

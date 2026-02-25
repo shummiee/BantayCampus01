@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
@@ -48,7 +49,10 @@ enum class DateRange(val label: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminAlertHistoryPageUI(
+fun AdminAlertHistory(
+    modifier: Modifier,
+    navController: NavController,
+
     adminName: String = "Admin",
     onViewDetails1: () -> Unit = {},
     onViewDetails2: () -> Unit = {},
@@ -179,11 +183,8 @@ fun AdminAlertHistoryPageUI(
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             AdminNavBar(
-                onHome = onHomeNav,
-                onAlert = onAlertNav,
-                onIncoming = onIncomingNav,
-                onSafety = onSafetyNav,
-                onProfile = onProfileNav
+                modifier = Modifier,
+                navController
             )
         }
     }

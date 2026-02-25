@@ -16,28 +16,20 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.bantaycampus01.model.CheckInItem
+import com.example.bantaycampus01.model.CheckInDateRange
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
 
-data class CheckInItem(
-    val name: String,
-    val rightTime: String,
-    val statusLabel: String,
-    val statusColor: Color,
-    val lastCheckIn: String
-)
-
-enum class CheckInDateRange(val label: String) {
-    TODAY("Today"),
-    LAST_7("Last 7 days"),
-    LAST_30("Last 30 days"),
-    CUSTOM("Custom range")
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminCheckInPageUI(
+fun AdminCheckInPage(
+    modifier: Modifier,
+    navController: NavController,
     adminName: String = "Admin",
     items: List<CheckInItem> = listOf(
         CheckInItem(
@@ -133,11 +125,8 @@ fun AdminCheckInPageUI(
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             AdminNavBar(
-                onHome = onHomeNav,
-                onAlert = onAlertNav,
-                onIncoming = onIncomingNav,
-                onSafety = onSafetyNav,
-                onProfile = onProfileNav
+                modifier = Modifier,
+                navController
             )
         }
     }

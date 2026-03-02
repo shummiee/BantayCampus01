@@ -44,7 +44,7 @@ fun UserNavBar(
             BottomNavSlot(
                 res = R.drawable.shield,
                 contentDescription = "Safety Page",
-                onClick = {  },
+                onClick = { navController.navigate("UserSafety_Screen") },
                 modifier = Modifier.weight(1f)
             )
 
@@ -53,7 +53,7 @@ fun UserNavBar(
             BottomNavSlot(
                 res = R.drawable.alert,
                 contentDescription = "Alert Page",
-                onClick = {  },
+                onClick = { navController.navigate("UserAlert_Screen") },
                 modifier = Modifier.weight(1f)
             )
 

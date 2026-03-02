@@ -46,12 +46,7 @@ fun AdminCheckInPage(
             statusColor = Color(0xFF29C65E),
             lastCheckIn = "Feb 3, 2026 • 9:40 AM"
         )
-    ),
-    onHomeNav: () -> Unit = {},
-    onAlertNav: () -> Unit = {},
-    onIncomingNav: () -> Unit = {},
-    onSafetyNav: () -> Unit = {},
-    onProfileNav: () -> Unit = {}
+    )
 ) {
     val border = Color(0xFF6F7A8E)
     val cardBg = Color(0xFFCAD6EE)

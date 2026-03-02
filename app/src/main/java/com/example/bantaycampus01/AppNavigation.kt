@@ -11,9 +11,10 @@ import com.example.bantaycampus01.screens.Admin.AdminHomePage
 import com.example.bantaycampus01.screens.Admin.AdminSafetyPage
 import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
+import com.example.bantaycampus01.screens.User.UserAlertScreen
 import com.example.bantaycampus01.screens.User.UserHomePage
 import com.example.bantaycampus01.screens.User.UserProfileScreen
-import com.example.bantaycampus01.screens.User.UserSosConfirmDialog
+import com.example.bantaycampus01.screens.User.UserSafetyScreen
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -51,6 +52,12 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("UserProfile_Screen"){
             UserProfileScreen(modifier, navController)
+        }
+        composable("UserSafety_Screen"){
+            UserSafetyScreen(modifier, navController)
+        }
+        composable("UserAlert_Screen"){
+            UserAlertScreen(modifier, navController)
         }
     }
 }

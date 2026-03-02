@@ -46,15 +46,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.screens.User.MainMenu
-import com.example.bantaycampus01.ui.theme.DarkGrayBlue
-import com.example.bantaycampus01.ui.theme.SubTextLabel
-import com.example.bantaycampus01.ui.theme.TextBoxBg
-import com.example.bantaycampus01.ui.theme.TextBoxPlaceholder
-import com.example.bantaycampus01.ui.theme.TextBoxText
-import com.example.bantaycampus01.ui.theme.TextOnDark
-import com.example.bantaycampus01.ui.theme.TextOnWhite
-import com.example.bantaycampus01.ui.theme.White
+import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
@@ -171,7 +163,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
                             success,errorMessage->
                         if(success) {
                             isLoading = false
-                            navController.navigate("MainMenu_Screen"){
+                            navController.navigate("UserHomePage_Screen"){
                                 popUpTo("Login_Screen"){inclusive=true}
                             }
                         //**************************HARD CODED ADMIN LOGIN CREDENTIALS****************************//

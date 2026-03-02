@@ -1,11 +1,10 @@
 package com.example.bantaycampus01.partials.user
-
+/*
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.example.finalproject.navigation.Routes
 import com.example.bantaycampus01.screens.User.*
 
 fun NavGraphBuilder.userNavGraph(navController: NavController) {
@@ -183,3 +182,4 @@ private fun SosPopupRoute(onDone: () -> Unit) {
         )
     }
 }
+*/

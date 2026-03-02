@@ -52,23 +52,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.bantaycampus01.ui.theme.DarkGrayBlue
-import com.example.bantaycampus01.ui.theme.PopUpButton
-import com.example.bantaycampus01.ui.theme.SubTextLabel
-import com.example.bantaycampus01.ui.theme.TextOnDark
-import com.example.bantaycampus01.ui.theme.TextOnWhite
-import com.example.bantaycampus01.ui.theme.White
+import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.partials.admin.AdminHeader
-import com.example.bantaycampus01.partials.admin.AdminNavBar
-import com.example.bantaycampus01.ui.theme.TextBoxBg
+import com.example.bantaycampus01.partials.admin.*
+import com.example.bantaycampus01.model.*
 
-enum class CampusRiskLevel(val label: String, val dotColor: Color) {
-    CRITICAL("CRITICAL", Color(0xFFE53935)), // 🔴
-    HIGH("HIGH", Color(0xFFFF7A00)),        // 🟠
-    MODERATE("MODERATE", Color(0xFFF4B400)),// 🟡
-    SAFE("SAFE", Color(0xFF29C65E))         // 🟢
-}
 
 @Composable
 fun AdminHomePage(
@@ -90,13 +78,7 @@ fun AdminHomePage(
 
     onIncomingAlertsClick: () -> Unit = {},
     onManageCasesClick: () -> Unit = {},
-    onRiskControlClick: () -> Unit = {},
-
-    onHomeNav: () -> Unit = {},
-    onAlertNav: () -> Unit = {},
-    onIncomingNav: () -> Unit = {},
-    onSafetyNav: () -> Unit = {},
-    onProfileNav: () -> Unit = {},
+    onRiskControlClick: () -> Unit = {}
 ) {
     val header = DarkGrayBlue
 

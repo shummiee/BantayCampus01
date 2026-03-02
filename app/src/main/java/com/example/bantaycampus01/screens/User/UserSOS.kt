@@ -1,25 +1,38 @@
 package com.example.bantaycampus01.screens.User
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.bantaycampus01.partials.user.*
+import androidx.navigation.NavController
+import com.example.bantaycampus01.partials.user.UserUI
 
 @Composable
-fun SosConfirmDialog(
+fun UserSosConfirmDialog(
+    modifier: Modifier = Modifier,
+
     onClose: () -> Unit,
     onConfirm: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onClose,
-        confirmButton = {},
         title = null,
         text = {
             Card(
@@ -27,56 +40,66 @@ fun SosConfirmDialog(
                 colors = CardDefaults.cardColors(containerColor = UserUI.SoftGray)
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "SOS!",
+                        text = "SOS!",
                         fontWeight = FontWeight.Black,
                         color = UserUI.DangerRed,
-                        fontSize = 24.sp
+                        fontSize = 26.sp
                     )
 
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        "Are you sure you want to send an emergency alert to campus security?\n\n" +
+                        text = "Are you sure you want to send an emergency alert to campus security?\n\n" +
                                 "This will immediately notify responders and share your location.",
                         color = UserUI.DarkBlue,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
                     )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Button(
-                        onClick = onConfirm,
-                        colors = ButtonDefaults.buttonColors(containerColor = UserUI.DangerRed),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("YES, SEND SOS", color = Color.White, fontWeight = FontWeight.Black)
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-
-                    OutlinedButton(
-                        onClick = onClose,
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("CANCEL", fontWeight = FontWeight.Bold, color = UserUI.DarkBlue)
-                    }
                 }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = UserUI.DangerRed),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "YES, SEND SOS",
+                    color = Color.White,
+                    fontWeight = FontWeight.Black
+                )
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onClose,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "CANCEL",
+                    fontWeight = FontWeight.Bold,
+                    color = UserUI.DarkBlue
+                )
             }
         }
     )
 }
 
 @Composable
-fun SosSentDialog(onClose: () -> Unit) {
+fun SosSentDialog(
+    onClose: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = onClose,
-        confirmButton = {},
         title = null,
         text = {
             Card(
@@ -84,23 +107,43 @@ fun SosSentDialog(onClose: () -> Unit) {
                 colors = CardDefaults.cardColors(containerColor = UserUI.SoftGray)
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("SOS Sent!", fontWeight = FontWeight.Black, color = UserUI.DarkBlue, fontSize = 20.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Campus security has been notified.", color = UserUI.DarkBlue)
-                    Spacer(Modifier.height(14.dp))
-                    Button(
-                        onClick = onClose,
-                        colors = ButtonDefaults.buttonColors(containerColor = UserUI.DangerRed),
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("OK", color = Color.White, fontWeight = FontWeight.Black)
-                    }
+                    Text(
+                        text = "SOS Sent!",
+                        fontWeight = FontWeight.Black,
+                        color = UserUI.DarkBlue,
+                        fontSize = 20.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Campus security has been notified.",
+                        color = UserUI.DarkBlue,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
-        }
+        },
+        confirmButton = {
+            Button(
+                onClick = onClose,
+                colors = ButtonDefaults.buttonColors(containerColor = UserUI.DangerRed),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "OK",
+                    color = Color.White,
+                    fontWeight = FontWeight.Black
+                )
+            }
+        },
+        dismissButton = {}
     )
 }

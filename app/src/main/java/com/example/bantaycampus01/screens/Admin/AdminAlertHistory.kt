@@ -221,7 +221,6 @@ fun AdminAlertHistory(
                 }
 
                 Spacer(Modifier.height(10.dp))
-                Divider()
                 Spacer(Modifier.height(10.dp))
 
                 Text("Date / Time", fontWeight = FontWeight.Bold)

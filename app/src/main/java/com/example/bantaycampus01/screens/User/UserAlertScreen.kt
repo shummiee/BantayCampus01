@@ -165,7 +165,7 @@ fun UserAlertScreen(
                         item = item,
                         bg = cardBg,
                         border = border,
-                        onViewDetails = { onViewDetails(item) }
+                        onViewDetails = { navController.navigate("UserAlertDetails_Screen") }
                     )
                 }
 

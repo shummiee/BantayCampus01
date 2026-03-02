@@ -11,6 +11,7 @@ import com.example.bantaycampus01.screens.Admin.AdminHomePage
 import com.example.bantaycampus01.screens.Admin.AdminSafetyPage
 import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
+import com.example.bantaycampus01.screens.User.UserAlertDetailsScreen
 import com.example.bantaycampus01.screens.User.UserAlertScreen
 import com.example.bantaycampus01.screens.User.UserHomePage
 import com.example.bantaycampus01.screens.User.UserProfileScreen
@@ -58,6 +59,13 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("UserAlert_Screen"){
             UserAlertScreen(modifier, navController)
+        }
+        //*************************************USER DETAILS SCREENS***************
+        composable("UserAlertDetails_Screen"){
+            UserAlertDetailsScreen(modifier, navController) { }
+        }
+        composable("UserSend_Screen"){
+            UserAlertDetailsScreen(modifier, navController) { }
         }
     }
 }

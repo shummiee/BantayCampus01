@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,17 +20,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,19 +38,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.partials.admin.*
-import com.example.bantaycampus01.model.*
-
+import com.example.bantaycampus01.model.CampusRiskLevel
+import com.example.bantaycampus01.partials.admin.AdminHeader
+import com.example.bantaycampus01.partials.admin.AdminNavBar
+import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.screens.Admin.PopUps.*
 
 @Composable
 fun AdminHomePage(
@@ -81,22 +73,21 @@ fun AdminHomePage(
     onRiskControlClick: () -> Unit = {}
 ) {
     val header = DarkGrayBlue
-
     val screenScroll = rememberScrollState()
 
+    // Advisory state
     var advisory by remember { mutableStateOf(advisoryText) }
     var showAdvisoryDialog by remember { mutableStateOf(false) }
     var tempAdvisory by remember { mutableStateOf(advisoryText) }
 
+    // Campus status state
     var showCampusStatusDialog by remember { mutableStateOf(false) }
-
     val statusOptions = listOf("RESOLVED", "CAUTION", "RESTRICTED")
     var selectedCampusStatus by remember { mutableStateOf(statusOptions[0]) }
     var tempCampusStatus by remember { mutableStateOf(selectedCampusStatus) }
 
     var campusNote by remember { mutableStateOf("") }
     var tempCampusNote by remember { mutableStateOf(campusNote) }
-
     var statusExpanded by remember { mutableStateOf(false) }
 
     var safetyStatusState by remember { mutableStateOf(safetyStatus) }
@@ -110,6 +101,7 @@ fun AdminHomePage(
         else -> Color(0xFF29C65E)
     }
 
+    // Risk control state
     var showRiskControlDialog by remember { mutableStateOf(false) }
 
     var currentRiskLevel by remember {
@@ -126,7 +118,6 @@ fun AdminHomePage(
             .fillMaxSize()
             .background(White)
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -150,7 +141,6 @@ fun AdminHomePage(
             }
 
             Column(modifier = Modifier.padding(horizontal = 14.dp)) {
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -458,427 +448,56 @@ fun AdminHomePage(
             )
         }
 
-        if (showAdvisoryDialog) {
-            val dialogScroll = rememberScrollState()
+        // ✅ POPUPS (now from separate files)
+        AdminAdvisoryDialog(
+            show = showAdvisoryDialog,
+            tempAdvisory = tempAdvisory,
+            onTempAdvisoryChange = { tempAdvisory = it },
+            onUpdate = {
+                advisory = tempAdvisory.trim()
+                showAdvisoryDialog = false
+            },
+            onDismiss = { showAdvisoryDialog = false }
+        )
 
-            Dialog(onDismissRequest = { showAdvisoryDialog = false }) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp)
-                        .heightIn(max = 620.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    color = White,
-                    shadowElevation = 8.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(dialogScroll)
-                            .padding(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(TextBoxBg),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("i", fontWeight = FontWeight.Black, color = TextOnWhite)
-                            }
+        AdminCampusStatusDialog(
+            show = showCampusStatusDialog,
+            statusOptions = statusOptions,
+            statusExpanded = statusExpanded,
+            onStatusExpandedChange = { statusExpanded = it },
+            tempCampusStatus = tempCampusStatus,
+            onTempCampusStatusChange = { tempCampusStatus = it },
+            tempCampusNote = tempCampusNote,
+            onTempCampusNoteChange = { tempCampusNote = it },
+            onUpdate = {
+                selectedCampusStatus = tempCampusStatus
+                campusNote = tempCampusNote
 
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Campus Security Advisory",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = TextOnWhite,
-                                    lineHeight = 14.sp
-                                )
-                                Text(
-                                    text = "Now",
-                                    fontSize = 11.sp,
-                                    color = SubTextLabel
-                                )
-                            }
-
-                            IconButton(onClick = { showAdvisoryDialog = false }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Close,
-                                    contentDescription = "Close",
-                                    tint = TextOnWhite
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        OutlinedTextField(
-                            value = tempAdvisory,
-                            onValueChange = { tempAdvisory = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(140.dp),
-                            placeholder = { Text("Type campus advisory here...", fontSize = 12.sp) },
-                            shape = RoundedCornerShape(12.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Button(
-                                onClick = {
-                                    advisory = tempAdvisory.trim()
-                                    showAdvisoryDialog = false
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = "UPDATE",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 12.sp,
-                                    color = TextOnDark
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Button(
-                                onClick = { showAdvisoryDialog = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = "CANCEL",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 12.sp,
-                                    color = TextOnDark
-                                )
-                            }
-                        }
-                    }
+                safetyStatusState = tempCampusStatus
+                if (campusNote.isNotBlank()) {
+                    safetyMessageState = campusNote.trim()
                 }
-            }
-        }
+                showCampusStatusDialog = false
+            },
+            onDismiss = { showCampusStatusDialog = false }
+        )
 
-        if (showCampusStatusDialog) {
-            val dialogScroll = rememberScrollState()
-
-            Dialog(onDismissRequest = { showCampusStatusDialog = false }) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp)
-                        .heightIn(max = 620.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    color = White,
-                    shadowElevation = 8.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(dialogScroll)
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "UPDATE CAMPUS STATUS",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Black,
-                            color = TextOnWhite,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "STATUS",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Black,
-                                color = TextOnWhite
-                            )
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Box(modifier = Modifier.weight(1f)) {
-                                OutlinedButton(
-                                    onClick = { statusExpanded = true },
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(38.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                                ) {
-                                    Text(
-                                        text = tempCampusStatus,
-                                        fontSize = 12.sp,
-                                        color = TextOnWhite,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text("▾", color = TextOnWhite)
-                                }
-
-                                DropdownMenu(
-                                    expanded = statusExpanded,
-                                    onDismissRequest = { statusExpanded = false }
-                                ) {
-                                    statusOptions.forEach { option ->
-                                        DropdownMenuItem(
-                                            text = { Text(option, fontSize = 12.sp) },
-                                            onClick = {
-                                                tempCampusStatus = option
-                                                statusExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = "Note:",
-                            fontSize = 12.sp,
-                            color = TextOnWhite,
-                            fontStyle = FontStyle.Italic
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        OutlinedTextField(
-                            value = tempCampusNote,
-                            onValueChange = { tempCampusNote = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(95.dp),
-                            placeholder = { Text("Enter update note...", fontSize = 12.sp) },
-                            shape = RoundedCornerShape(14.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Button(
-                                onClick = {
-                                    selectedCampusStatus = tempCampusStatus
-                                    campusNote = tempCampusNote
-
-                                    safetyStatusState = tempCampusStatus
-                                    if (campusNote.isNotBlank()) {
-                                        safetyMessageState = campusNote.trim()
-                                    }
-
-                                    showCampusStatusDialog = false
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = "UPDATE",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 12.sp,
-                                    color = TextOnDark
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Button(
-                                onClick = { showCampusStatusDialog = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = "CANCEL",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 12.sp,
-                                    color = TextOnDark
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (showRiskControlDialog) {
-            val dialogScroll = rememberScrollState()
-
-            Dialog(onDismissRequest = { showRiskControlDialog = false }) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp)
-                        .heightIn(max = 620.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    color = White,
-                    shadowElevation = 8.dp
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(dialogScroll)
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "SAFETY UPDATE",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Black,
-                            color = TextOnWhite,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "STATUS",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Black,
-                                color = TextOnWhite
-                            )
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Box(modifier = Modifier.weight(1f)) {
-                                OutlinedButton(
-                                    onClick = { riskExpanded = true },
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(38.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                                ) {
-                                    Text(
-                                        text = when (tempRiskLevel) {
-                                            CampusRiskLevel.CRITICAL -> "🔴 Critical"
-                                            CampusRiskLevel.HIGH -> "🟠 High"
-                                            CampusRiskLevel.MODERATE -> "🟡 Moderate"
-                                            CampusRiskLevel.SAFE -> "🟢 Safe"
-                                        },
-                                        fontSize = 12.sp,
-                                        color = TextOnWhite,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text("▾", color = TextOnWhite)
-                                }
-
-                                DropdownMenu(
-                                    expanded = riskExpanded,
-                                    onDismissRequest = { riskExpanded = false }
-                                ) {
-                                    DropdownMenuItem(
-                                        text = { Text("🔴 Critical") },
-                                        onClick = { tempRiskLevel = CampusRiskLevel.CRITICAL; riskExpanded = false }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("🟠 High") },
-                                        onClick = { tempRiskLevel = CampusRiskLevel.HIGH; riskExpanded = false }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("🟡 Moderate") },
-                                        onClick = { tempRiskLevel = CampusRiskLevel.MODERATE; riskExpanded = false }
-                                    )
-                                    DropdownMenuItem(
-                                        text = { Text("🟢 Safe") },
-                                        onClick = { tempRiskLevel = CampusRiskLevel.SAFE; riskExpanded = false }
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = "Note:",
-                            fontSize = 12.sp,
-                            color = TextOnWhite,
-                            fontStyle = FontStyle.Italic
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        OutlinedTextField(
-                            value = tempRiskNote,
-                            onValueChange = { tempRiskNote = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(95.dp),
-                            placeholder = { Text("Enter note...", fontSize = 12.sp) },
-                            shape = RoundedCornerShape(14.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Button(
-                                onClick = {
-                                    currentRiskLevel = tempRiskLevel
-                                    riskNote = tempRiskNote
-                                    showRiskControlDialog = false
-                                    onRiskControlClick()
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = "UPDATE",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 12.sp,
-                                    color = TextOnDark
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Button(
-                                onClick = { showRiskControlDialog = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = "CANCEL",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 12.sp,
-                                    color = TextOnDark
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        AdminRiskControlDialog(
+            show = showRiskControlDialog,
+            riskExpanded = riskExpanded,
+            onRiskExpandedChange = { riskExpanded = it },
+            tempRiskLevel = tempRiskLevel,
+            onTempRiskLevelChange = { tempRiskLevel = it },
+            tempRiskNote = tempRiskNote,
+            onTempRiskNoteChange = { tempRiskNote = it },
+            onUpdate = {
+                currentRiskLevel = tempRiskLevel
+                riskNote = tempRiskNote
+                showRiskControlDialog = false
+                onRiskControlClick()
+            },
+            onDismiss = { showRiskControlDialog = false }
+        )
     }
 }
 

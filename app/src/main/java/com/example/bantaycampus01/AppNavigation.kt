@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bantaycampus01.screens.Admin.AdminAlertHistory
+import com.example.bantaycampus01.screens.Admin.AdminAlertPage
 import com.example.bantaycampus01.screens.Admin.AdminCheckInPage
 import com.example.bantaycampus01.screens.Admin.AdminHomePage
 import com.example.bantaycampus01.screens.Admin.AdminSafetyPage
@@ -42,7 +43,7 @@ fun AppNavigation(modifier: Modifier = Modifier){
             AdminSafetyPage(modifier,navController)
         }
         composable("AdminAlertPage_Screen"){
-            AdminAlertHistory(modifier,navController)
+            AdminAlertPage(modifier,navController)
         }
         composable("AdminCheckinPage_Screen"){
             AdminCheckInPage(modifier,navController)

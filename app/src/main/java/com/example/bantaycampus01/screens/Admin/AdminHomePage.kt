@@ -355,7 +355,7 @@ fun AdminHomePage(
                         iconRes = R.drawable.incoming,
                         container = Color(0xFFB50000),
                         content = White,
-                        onClick = onIncomingAlertsClick
+                        onClick = { navController.navigate("AdminAlertPage_Screen") }
                     )
 
                     ActionButton(

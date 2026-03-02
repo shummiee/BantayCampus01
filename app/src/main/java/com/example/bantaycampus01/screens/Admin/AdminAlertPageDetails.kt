@@ -126,7 +126,6 @@ fun AdminAlertPageDetails(
 
                 Spacer(Modifier.height(10.dp))
 
-                Divider(color = border.copy(alpha = 0.7f), thickness = 1.dp)
 
                 Spacer(Modifier.height(10.dp))
 
@@ -166,9 +165,6 @@ fun AdminAlertPageDetails(
                         onClick = onViewImage,
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
                         shape = RoundedCornerShape(6.dp),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(
-                            brush = androidx.compose.ui.graphics.SolidColor(border)
-                        ),
                         modifier = Modifier.height(24.dp)
                     ) {
                         Text(

@@ -55,12 +55,7 @@ fun AdminAlertHistory(
 
     adminName: String = "Admin",
     onViewDetails1: () -> Unit = {},
-    onViewDetails2: () -> Unit = {},
-    onHomeNav: () -> Unit = {},
-    onAlertNav: () -> Unit = {},
-    onIncomingNav: () -> Unit = {},
-    onSafetyNav: () -> Unit = {},
-    onProfileNav: () -> Unit = {}
+    onViewDetails2: () -> Unit = {}
 ) {
     val border = Color(0xFF6F7A8E)
     val cardBg = Color(0xFFE3ECFF)
@@ -161,7 +156,8 @@ fun AdminAlertHistory(
                     details = "\"Lights are out in several classrooms...\"",
                     cardBg = cardBg,
                     border = border,
-                    onViewDetails = onViewDetails1
+                    onViewDetails = onViewDetails1,
+                    navController = navController
                 )
 
                 AlertHistoryCard(
@@ -174,7 +170,8 @@ fun AdminAlertHistory(
                     details = "\"Student fainted and needs medical assistance...\"",
                     cardBg = cardBg,
                     border = border,
-                    onViewDetails = onViewDetails2
+                    onViewDetails = onViewDetails2,
+                    navController = navController
                 )
             }
 
@@ -303,6 +300,7 @@ private fun SmallPillButton(
 
 @Composable
 private fun AlertHistoryCard(
+    navController: NavController,
     titleIcon: String,
     title: String,
     dateText: String,
@@ -378,7 +376,9 @@ private fun AlertHistoryCard(
 
         Row(modifier = Modifier.fillMaxWidth()) {
             Spacer(modifier = Modifier.weight(1f))
-            TextButton(onClick = onViewDetails) {
+            TextButton(
+                onClick = {navController.navigate("AdminAlertPageDetails_Screen")} )
+            {
                 Text(
                     text = "View Details →",
                     fontSize = 12.sp,

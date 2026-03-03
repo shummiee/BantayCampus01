@@ -5,7 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,9 +16,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.bantaycampus01.partials.admin.AdminHeader
-import com.example.bantaycampus01.partials.admin.AdminNavBar
+import com.example.bantaycampus01.model.*
+import com.example.bantaycampus01.partials.admin.*
 import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.screens.Admin.PopUps.*
 
 @Composable
 fun AdminAlertPageDetails(
@@ -40,19 +41,22 @@ fun AdminAlertPageDetails(
         "9:40 AM – Issue resolved"
     ),
     onReturn: () -> Unit = {},
-    onViewImage: () -> Unit = {},
-    onEdit: () -> Unit = {},
-    onBack: () -> Unit = {},
-    onHomeNav: () -> Unit = {},
-    onAlertNav: () -> Unit = {},
-    onIncomingNav: () -> Unit = {},
-    onSafetyNav: () -> Unit = {},
-    onProfileNav: () -> Unit = {}
+    onViewImage: () -> Unit = {}
 ) {
     val border = Color(0xFF6F7A8E)
     val panelBg = Color(0xFFCAD6EE)
     val header = DarkGrayBlue
     val green = Color(0xFF29C65E)
+
+    var showUpdateDialog by remember { mutableStateOf(false) }
+
+    var statusExpanded by remember { mutableStateOf(false) }
+    var campusExpanded by remember { mutableStateOf(false) }
+
+    var selectedStatus by remember { mutableStateOf(AlertStatusOpt.SENT) }
+    var selectedCampus by remember { mutableStateOf(CampusRiskOpt.SAFE) }
+
+    var adminNote by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -213,6 +217,35 @@ fun AdminAlertPageDetails(
                 navController
             )
         }
+
+        // --- Dialog: show when showUpdateDialog == true ---
+        AdminAlertDetailsDialog(
+            show = showUpdateDialog,
+
+            statusExpanded = statusExpanded,
+            onStatusExpandedChange = { statusExpanded = it },
+
+            campusExpanded = campusExpanded,
+            onCampusExpandedChange = { campusExpanded = it },
+
+            selectedStatus = selectedStatus,
+            onSelectedStatusChange = { selectedStatus = it },
+
+            selectedCampus = selectedCampus,
+            onSelectedCampusChange = { selectedCampus = it },
+
+            adminNote = adminNote,
+            onAdminNoteChange = { adminNote = it },
+
+            onUpdate = {
+                // Put your update logic here
+                showUpdateDialog = false
+            },
+
+            onDismiss = {
+                showUpdateDialog = false
+            }
+        )
     }
 }
 

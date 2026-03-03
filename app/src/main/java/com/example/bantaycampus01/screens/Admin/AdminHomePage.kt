@@ -363,7 +363,7 @@ fun AdminHomePage(
                         iconRes = R.drawable.cases,
                         container = TextBoxBg,
                         content = TextOnWhite,
-                        onClick = onManageCasesClick
+                        onClick = { navController.navigate("AdminAlertHistory_Screen") }
                     )
 
                     ActionButton(

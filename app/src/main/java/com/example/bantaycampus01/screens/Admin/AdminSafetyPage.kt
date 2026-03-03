@@ -8,8 +8,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,11 +20,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.screens.Admin.PopUps.CAMPUS_STATUS_OPTIONS
+
+// ✅ POPUPS: import from Admin.PopUps package
+import com.example.bantaycampus01.screens.Admin.PopUps.*
 
 @Composable
 fun AdminSafetyPage(
@@ -36,9 +37,7 @@ fun AdminSafetyPage(
     adminName: String = "Admin",
 
     onGoToCheckInPage: () -> Unit = {},
-
 ) {
-
     var showAdvisoryDialog by rememberSaveable { mutableStateOf(false) }
     var showCampusDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -49,10 +48,9 @@ fun AdminSafetyPage(
         )
     }
     var advisoryTime by rememberSaveable { mutableStateOf("10:45 AM • Ongoing") }
-
     var tempAdvisory by rememberSaveable { mutableStateOf(advisoryBody) }
 
-    val statusOptions = listOf("SAFE", "CAUTION", "RESTRICTED", "RESOLVED")
+    val statusOptions = CAMPUS_STATUS_OPTIONS
 
     var campusStatus by rememberSaveable { mutableStateOf("SAFE") }
     var campusMessage by rememberSaveable {
@@ -87,287 +85,47 @@ fun AdminSafetyPage(
             tempCampusNote = campusMessage.trim('"')
             showCampusDialog = true
         },
+
         modifier = Modifier,
         navController = navController
     )
 
-    if (showAdvisoryDialog) {
-        val dialogScroll = rememberScrollState()
+    // ✅ Advisory popup is now called from Admin.PopUps
+    AdminAdvisoryDialog(
+        show = showAdvisoryDialog,
+        tempAdvisory = tempAdvisory,
+        onTempAdvisoryChange = { tempAdvisory = it },
+        onUpdate = {
+            advisoryBody = tempAdvisory.trim()
+            advisoryTime = "Now • Ongoing"
+            showAdvisoryDialog = false
+        },
+        onDismiss = { showAdvisoryDialog = false }
+    )
 
-        Dialog(onDismissRequest = { showAdvisoryDialog = false }) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp)
-                    .heightIn(max = 620.dp),
-                shape = RoundedCornerShape(18.dp),
-                color = White,
-                shadowElevation = 8.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(dialogScroll)
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(TextBoxBg),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("i", fontWeight = FontWeight.Black, color = TextOnWhite)
-                        }
+    // ✅ Campus Update popup is now called from Admin.PopUps
+    AdminCampusStatusDialog(
+        show = showCampusDialog,
 
-                        Spacer(modifier = Modifier.width(10.dp))
+        statusOptions = statusOptions,
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Campus Security Advisory",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Black,
-                                color = TextOnWhite,
-                                lineHeight = 14.sp
-                            )
-                            Text(
-                                text = "Now",
-                                fontSize = 11.sp,
-                                color = SubTextLabel
-                            )
-                        }
+        statusExpanded = statusExpanded,
+        onStatusExpandedChange = { statusExpanded = it },
 
-                        IconButton(onClick = { showAdvisoryDialog = false }) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = "Close",
-                                tint = TextOnWhite
-                            )
-                        }
-                    }
+        tempCampusStatus = tempCampusStatus,
+        onTempCampusStatusChange = { tempCampusStatus = it },
 
-                    Spacer(modifier = Modifier.height(12.dp))
+        tempCampusNote = tempCampusNote,
+        onTempCampusNoteChange = { tempCampusNote = it },
 
-                    OutlinedTextField(
-                        value = tempAdvisory,
-                        onValueChange = { tempAdvisory = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        placeholder = { Text("Type campus advisory here...", fontSize = 12.sp) },
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                advisoryBody = tempAdvisory.trim()
-                                advisoryTime = "Now • Ongoing"
-                                showAdvisoryDialog = false
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = "UPDATE",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 12.sp,
-                                color = TextOnDark
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Button(
-                            onClick = { showAdvisoryDialog = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = "CANCEL",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 12.sp,
-                                color = TextOnDark
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (showCampusDialog) {
-        val dialogScroll = rememberScrollState()
-
-        Dialog(onDismissRequest = { showCampusDialog = false }) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 22.dp)
-                    .heightIn(max = 620.dp),
-                shape = RoundedCornerShape(18.dp),
-                color = White,
-                shadowElevation = 8.dp
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(dialogScroll)
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "UPDATE CAMPUS STATUS",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        color = TextOnWhite,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "STATUS",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Black,
-                            color = TextOnWhite
-                        )
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        val dotColor = when (tempCampusStatus.uppercase()) {
-                            "SAFE" -> Color(0xFF29C65E)
-                            "CAUTION" -> Color(0xFFF4B400)
-                            "RESTRICTED" -> Color(0xFFE53935)
-                            "RESOLVED" -> Color(0xFF29C65E)
-                            else -> Color(0xFF29C65E)
-                        }
-
-                        Box(modifier = Modifier.weight(1f)) {
-                            OutlinedButton(
-                                onClick = { statusExpanded = true },
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(38.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                            ) {
-                                Text(
-                                    text = tempCampusStatus,
-                                    fontSize = 12.sp,
-                                    color = TextOnWhite,
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(dotColor)
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("▾", color = TextOnWhite)
-                            }
-
-                            DropdownMenu(
-                                expanded = statusExpanded,
-                                onDismissRequest = { statusExpanded = false }
-                            ) {
-                                statusOptions.forEach { option ->
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            tempCampusStatus = option
-                                            statusExpanded = false
-                                        },
-                                        text = { Text(option, fontSize = 12.sp) }
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = "Note:",
-                        fontSize = 12.sp,
-                        color = TextOnWhite,
-                        fontStyle = FontStyle.Italic
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    OutlinedTextField(
-                        value = tempCampusNote,
-                        onValueChange = { tempCampusNote = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(95.dp),
-                        placeholder = { Text("Enter update note...", fontSize = 12.sp) },
-                        shape = RoundedCornerShape(14.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                campusStatus = tempCampusStatus
-                                campusMessage = "\"${tempCampusNote.trim()}\""
-                                campusTime = "Now"
-                                showCampusDialog = false
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = "UPDATE",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 12.sp,
-                                color = TextOnDark
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Button(
-                            onClick = { showCampusDialog = false },
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBlue),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                        ) {
-                            Text(
-                                text = "CANCEL",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 12.sp,
-                                color = TextOnDark
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
+        onUpdate = {
+            campusStatus = tempCampusStatus
+            campusMessage = "\"${tempCampusNote.trim()}\""
+            campusTime = "Now"
+            showCampusDialog = false
+        },
+        onDismiss = { showCampusDialog = false }
+    )
 }
 
 @Composable

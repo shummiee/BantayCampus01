@@ -35,6 +35,7 @@ import com.example.bantaycampus01.ui.theme.TextOnDark
 import com.example.bantaycampus01.ui.theme.TextOnWhite
 import com.example.bantaycampus01.ui.theme.White
 
+val CAMPUS_STATUS_OPTIONS = listOf("SAFE", "CAUTION", "RESTRICTED", "RESOLVED")
 @Composable
 fun AdminCampusStatusDialog(
     show: Boolean,

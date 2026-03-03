@@ -21,31 +21,10 @@ import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.model.*
 
-enum class AlertCategory(val label: String) {
-    ALL("All Categories"),
-    SUSPICIOUS("🚨 Suspicious Activity"),
-    MEDICAL("🏥 Medical Emergency"),
-    FIRE("🔥 Fire / Hazard"),
-    POWER("⚡ Power / Facility Issue"),
-    HARASSMENT("🧍 Harassment / Personal Threat"),
-    OTHERS("❓ Others")
-}
 
-enum class AlertStatus(val label: String) {
-    ALL("All Status"),
-    SENT("Sent"),
-    ACK("Acknowledged"),
-    RESPONDING("Responding"),
-    RESOLVED("Resolved")
-}
 
-enum class DateRange(val label: String) {
-    TODAY("Today"),
-    LAST_7("Last 7 days"),
-    LAST_30("Last 30 days"),
-    CUSTOM("Custom range")
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +41,7 @@ fun AdminAlertHistory(
     val dotGreen = Color(0xFF29C65E)
     val dotYellow = Color(0xFFF2C94C)
 
-    var selectedCategory by remember { mutableStateOf(AlertCategory.ALL) }
+    var selectedCategory by remember { mutableStateOf(AlertCategory2.ALL) }
     var selectedStatus by remember { mutableStateOf(AlertStatus.ALL) }
     var selectedRange by remember { mutableStateOf(DateRange.TODAY) }
 
@@ -112,7 +91,7 @@ fun AdminAlertHistory(
                         expanded = categoryExpanded,
                         onDismissRequest = { categoryExpanded = false }
                     ) {
-                        AlertCategory.entries.forEach { cat ->
+                        AlertCategory2.entries.forEach { cat ->
                             DropdownMenuItem(
                                 text = { Text(cat.label, fontSize = 13.sp) },
                                 onClick = {

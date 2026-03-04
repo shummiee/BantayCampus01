@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,10 +23,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +44,10 @@ import com.example.bantaycampus01.R
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
+import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportSentDialog
+import com.example.bantaycampus01.screens.User.Menu.PopUps.SendReportDialog
+import com.example.bantaycampus01.screens.User.Menu.PopUps.UrgencyLevel
 import com.example.bantaycampus01.ui.theme.TextOnDark
 
 @Composable
@@ -49,7 +55,6 @@ fun UserHomePage(
     modifier: Modifier,
     navController: NavController,
 
-    // ✅ Same idea as AdminHomePage: configurable texts/data
     userName: String = "User",
     campusStatusText: String = "SAFE",
     lastUpdatedText: String = "Last Updated 10:45 am by Admin",
@@ -59,7 +64,6 @@ fun UserHomePage(
     safetyStatus: String = "RESOLVED",
     advisoryText: String = "Due to heavy rain, some walkways may be slippery. Please take extra caution when moving around campus.",
 
-    // ✅ Fix undefined lambdas by making them real params
     onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSendReportClick: () -> Unit = {},
@@ -68,6 +72,25 @@ fun UserHomePage(
     onMarkSafeClick: () -> Unit = {}
 ) {
     val screenScroll = rememberScrollState()
+
+    // ✅ AdminAlertPage blueprint: dialog toggles here
+    var showSendReport by rememberSaveable { mutableStateOf(false) }
+    var showReportSent by rememberSaveable { mutableStateOf(false) }
+    var showReportStatus by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ SendReportDialog states (matches NEW SendReportDialog signature)
+    var incidentExpanded by rememberSaveable { mutableStateOf(false) }
+    val incidentOptions = listOf(
+        "Suspicious Activity",
+        "Medical Emergency",
+        "Theft",
+        "Harassment",
+        "Other"
+    )
+    var selectedIncident by rememberSaveable { mutableStateOf("") }
+    var reportLocation by rememberSaveable { mutableStateOf("") }
+    var reportDescription by rememberSaveable { mutableStateOf("") }
+    var urgency by rememberSaveable { mutableStateOf(UrgencyLevel.MODERATE) }
 
     // Optional: dot colors like admin
     val statusDotColor = when (campusStatusText.uppercase()) {
@@ -82,21 +105,18 @@ fun UserHomePage(
             .fillMaxSize()
             .background(UserUI.Bg)
     ) {
-        // Blueprint style: Scrollable content + bottom padding for navbar
+        // ✅ Content
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
                 .verticalScroll(screenScroll)
         ) {
-
-            // ✅ Use UserHeader (NOT UserHeaderBar from UserComponents)
             UserHeader(
                 userName = userName,
                 onProfileClick = onProfileClick
             )
 
-            // Notifications icon row (like your old code)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,7 +134,6 @@ fun UserHomePage(
                 }
             }
 
-            // CAMPUS RISK LEVEL section (same structure style as Admin)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -179,7 +198,6 @@ fun UserHomePage(
                                 )
                             }
 
-                            // MARK SAFE pill (clickable now)
                             Surface(
                                 onClick = onMarkSafeClick,
                                 shape = RoundedCornerShape(22.dp),
@@ -266,7 +284,6 @@ fun UserHomePage(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Bottom actions + campus advisory row (same as your user design)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -282,8 +299,9 @@ fun UserHomePage(
                         bg = UserUI.DangerRed,
                         fg = Color.White,
                         icon = R.drawable.incoming,
-                        onClick = onSendReportClick
+                        onClick = { showSendReport = true }
                     )
+
                     ActionPillButton(
                         title = "REPORT\nHISTORY",
                         bg = UserUI.PaleBlueCard,
@@ -291,12 +309,13 @@ fun UserHomePage(
                         icon = R.drawable.cases,
                         onClick = onReportHistoryClick
                     )
+
                     ActionPillButton(
                         title = "REPORT\nSTATUS",
                         bg = UserUI.PaleBlueCard,
                         fg = UserUI.DarkBlue,
                         icon = R.drawable.risk,
-                        onClick = onReportStatusClick
+                        onClick = { showReportStatus = true }
                     )
                 }
 
@@ -356,13 +375,67 @@ fun UserHomePage(
             Spacer(modifier = Modifier.height(90.dp))
         }
 
-        // ✅ Blueprint: navbar pinned at bottom, but USER navbar
+        // ✅ navbar pinned
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            UserNavBar(
-                modifier = Modifier,
-                navController = navController
-            )
+            UserNavBar(modifier = Modifier, navController = navController)
         }
+
+        // ✅ AdminAlertPage blueprint: POPUPS CALLED HERE
+
+        SendReportDialog(
+            show = showSendReport,
+
+            incidentExpanded = incidentExpanded,
+            onIncidentExpandedChange = { incidentExpanded = it },
+            incidentOptions = incidentOptions,
+            selectedIncident = selectedIncident,
+            onSelectedIncidentChange = { selectedIncident = it },
+
+            location = reportLocation,
+            onLocationChange = { reportLocation = it },
+            description = reportDescription,
+            onDescriptionChange = { reportDescription = it },
+
+            urgency = urgency,
+            onUrgencyChange = { urgency = it },
+
+            onUploadClick = { /* TODO: pick image */ },
+
+            onSubmit = {
+                onSendReportClick()
+                showSendReport = false
+                showReportSent = true
+
+                // clear
+                selectedIncident = ""
+                reportLocation = ""
+                reportDescription = ""
+                urgency = UrgencyLevel.MODERATE
+            },
+            onDismiss = { showSendReport = false }
+        )
+
+        ReportSentDialog(
+            show = showReportSent,
+            onDismiss = { showReportSent = false }
+        )
+
+        ReportDetailDialog(
+            show = showReportStatus,
+            reportIdLabel = "Report ID: #BC-2026-0145",
+            statusLabel = "Responding",
+            category = "🚨 Suspicious Activity",
+            dateTime = "Feb 3, 2026 – 9:23AM",
+            location = "Near Library Entrance",
+            description = "There is a person acting suspiciously near the stairs, checking doors and following students.",
+            hasAttachment = true,
+            onViewAttachment = { /* TODO: view image */ },
+            onMarkSafe = {
+                onReportStatusClick()
+                showReportStatus = false
+            },
+            onDismiss = { showReportStatus = false }
+        )
     }
 }
 

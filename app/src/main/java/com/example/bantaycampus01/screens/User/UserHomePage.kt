@@ -44,6 +44,7 @@ import com.example.bantaycampus01.R
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog   // ✅ ADD
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportSentDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.SendReportDialog
@@ -75,6 +76,9 @@ fun UserHomePage(
     var showSendReport by rememberSaveable { mutableStateOf(false) }
     var showReportSent by rememberSaveable { mutableStateOf(false) }
     var showReportStatus by rememberSaveable { mutableStateOf(false) }
+
+    // ✅ NEW: Success dialog after MARK SAFE
+    var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
 
     var incidentExpanded by rememberSaveable { mutableStateOf(false) }
 
@@ -210,7 +214,7 @@ fun UserHomePage(
                             }
 
                             Surface(
-                                onClick = onMarkSafeClick,
+                                onClick = { showMarkedSafeDialog = true },
                                 shape = RoundedCornerShape(22.dp),
                                 color = UserUI.DarkBlue
                             ) {
@@ -435,13 +439,21 @@ fun UserHomePage(
             onDismiss = { showReportSent = false }
         )
 
+        // ✅ Report Status popup
         ReportDetailDialog(
             show = showReportStatus,
             onMarkSafe = {
                 onReportStatusClick()
-                showReportStatus = false
             },
-            onDismiss = { showReportStatus = false }
+            onShowMarkedSafe = { showMarkedSafeDialog = true }, // ✅ SHOW THANK-YOU
+            onDismiss = { showReportStatus = false }             // ✅ CLOSE REPORT DETAIL
+        )
+
+        // ✅ Thank-you popup (shows after MARK SAFE)
+        MarkSafeDialog(
+            show = showMarkedSafeDialog,
+            onConfirm = { showMarkedSafeDialog = false }, // CLOSE
+            onDismiss = { showMarkedSafeDialog = false }
         )
     }
 }
@@ -473,7 +485,7 @@ private fun ActionButton(
                 contentDescription = null,
                 modifier = Modifier.size(35.dp)
             )
-        Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Text(
                 text = title,
@@ -482,6 +494,7 @@ private fun ActionButton(
                 color = fg,
                 lineHeight = 16.sp,
                 textAlign = TextAlign.Center
-            ) }
+            )
+        }
     }
 }

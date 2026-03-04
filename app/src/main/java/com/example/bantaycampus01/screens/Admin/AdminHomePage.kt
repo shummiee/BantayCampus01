@@ -49,6 +49,7 @@ import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.screens.Admin.PopUps.*
+import com.example.bantaycampus01.screens.Admin.PopUps.CAMPUS_STATUS_OPTIONS
 
 @Composable
 fun AdminHomePage(
@@ -82,7 +83,7 @@ fun AdminHomePage(
 
     // Campus status state
     var showCampusStatusDialog by remember { mutableStateOf(false) }
-    val statusOptions = listOf("RESOLVED", "CAUTION", "RESTRICTED")
+    val statusOptions = CAMPUS_STATUS_OPTIONS
     var selectedCampusStatus by remember { mutableStateOf(statusOptions[0]) }
     var tempCampusStatus by remember { mutableStateOf(selectedCampusStatus) }
 

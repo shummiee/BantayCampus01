@@ -5,7 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,17 +16,24 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.screens.User.PopUps.UserSosConfirmDialog
+import com.example.bantaycampus01.screens.User.PopUps.UserSosSentDialog
 
 @Composable
 fun UserNavBar(
     modifier: Modifier,
     navController: NavController
 ) {
+
+    var showConfirm by rememberSaveable { mutableStateOf(false) }
+    var showSent by rememberSaveable { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(90.dp)
     ) {
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -34,6 +42,7 @@ fun UserNavBar(
                 .background(DarkGrayBlue),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             BottomNavSlot(
                 res = R.drawable.home,
                 contentDescription = "Home",
@@ -65,6 +74,7 @@ fun UserNavBar(
             )
         }
 
+        // SOS BUTTON
         Box(
             modifier = Modifier
                 .size(76.dp)
@@ -73,7 +83,7 @@ fun UserNavBar(
                 .clip(CircleShape)
                 .background(Color(0xFFB50000))
                 .clickable {
-                    navController.navigate("")
+                    showConfirm = true
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -83,6 +93,26 @@ fun UserNavBar(
                 modifier = Modifier.size(44.dp)
             )
         }
+
+        // CONFIRM SOS DIALOG
+        UserSosConfirmDialog(
+            show = showConfirm,
+            onSendSos = {
+                showConfirm = false
+                showSent = true
+            },
+            onDismiss = {
+                showConfirm = false
+            }
+        )
+
+        // SENT SOS DIALOG
+        UserSosSentDialog(
+            show = showSent,
+            onDismiss = {
+                showSent = false
+            }
+        )
     }
 }
 

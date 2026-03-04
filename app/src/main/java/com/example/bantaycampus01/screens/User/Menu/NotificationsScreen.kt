@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
 
 // ✅ "Code name" so backend can differentiate later
@@ -47,10 +48,11 @@ fun NotificationsScreen(
     navController: NavController,
     userName: String = "User"
 ) {
-    // ✅ Admin blueprint: dialog toggle
     var showReportDetail by rememberSaveable { mutableStateOf(false) }
 
-    // Sample list (replace with backend later)
+    // ✅ this is the important state (owned by the SCREEN)
+    var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
+
     val notifications = remember {
         listOf(
             NotificationItem(
@@ -74,7 +76,7 @@ fun NotificationsScreen(
             NotificationItem(
                 code = NotificationCode.ANNOUNCEMENT,
                 time = "25 minutes ago",
-                title = "New Annoucement",
+                title = "New Announcement",
                 subtitle = "“There’s an chuchuchu...”",
                 leading = "📣",
                 isQuoteSubtitle = true
@@ -85,7 +87,6 @@ fun NotificationsScreen(
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
-            // ✅ Use UserHeader instead of UserHeaderBar
             UserHeader(
                 userName = userName,
                 onProfileClick = { navController.navigate("UserProfile_Screen") }
@@ -115,12 +116,8 @@ fun NotificationsScreen(
                     item = item,
                     onClick = {
                         when (item.code) {
-                            NotificationCode.SUSPICIOUS_ACTIVITY -> {
-                                showReportDetail = true
-                            }
-                            NotificationCode.ANNOUNCEMENT -> {
-                                navController.navigate("UserSafety_Screen")
-                            }
+                            NotificationCode.SUSPICIOUS_ACTIVITY -> showReportDetail = true
+                            NotificationCode.ANNOUNCEMENT -> navController.navigate("UserSafety_Screen")
                         }
                     }
                 )
@@ -128,7 +125,7 @@ fun NotificationsScreen(
         }
     }
 
-    // ✅ Popup for suspicious activity (Admin blueprint)
+    // ✅ Report detail popup
     ReportDetailDialog(
         show = showReportDetail,
         reportIdLabel = "Report ID: #BC-2026-0145",
@@ -139,8 +136,23 @@ fun NotificationsScreen(
         description = "There is a person acting suspiciously near the stairs, checking doors and following students.",
         hasAttachment = true,
         onViewAttachment = { /* TODO */ },
-        onMarkSafe = { showReportDetail = false },
+
+        // ✅ where you will connect backend later:
+        onMarkSafe = {
+            // TODO: update backend + local UI state
+        },
+
+        // ✅ show thank-you dialog AFTER closing report dialog
+        onShowMarkedSafe = { showMarkedSafeDialog = true },
+
         onDismiss = { showReportDetail = false }
+    )
+
+    // ✅ Thank-you dialog (this is what your screenshot shows)
+    MarkSafeDialog(
+        show = showMarkedSafeDialog,
+        onConfirm = { showMarkedSafeDialog = false }, // CLOSE
+        onDismiss = { showMarkedSafeDialog = false }
     )
 }
 

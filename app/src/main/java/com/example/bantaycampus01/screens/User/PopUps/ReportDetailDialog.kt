@@ -50,8 +50,11 @@ fun ReportDetailDialog(
     hasAttachment: Boolean = true,
     onViewAttachment: () -> Unit = {},
 
-    // bottom action
+    // bottom action (backend/state update)
     onMarkSafe: () -> Unit = {},
+
+    // ✅ NEW: tell parent to show thank-you dialog
+    onShowMarkedSafe: () -> Unit = {},
 
     onDismiss: () -> Unit
 ) {
@@ -107,7 +110,7 @@ fun ReportDetailDialog(
 
                 Spacer(Modifier.height(6.dp))
 
-                // Status line: "Status: ● Responding"
+                // Status line
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -140,14 +143,11 @@ fun ReportDetailDialog(
 
                 Spacer(Modifier.height(10.dp))
 
-                Divider(
-                    color = Color(0xFFB0B7C3),
-                    thickness = 1.dp
-                )
+                Divider(color = Color(0xFFB0B7C3), thickness = 1.dp)
 
                 Spacer(Modifier.height(12.dp))
 
-                // Details (Label: Value)
+                // Details
                 DetailRow(label = "Category:", value = category)
                 DetailRow(label = "Date & Time:", value = dateTime)
                 DetailRow(label = "Location:", value = location)
@@ -217,13 +217,17 @@ fun ReportDetailDialog(
 
                 Spacer(Modifier.height(18.dp))
 
-                // MARK SAFE button (center)
+                // MARK SAFE button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = onMarkSafe,
+                        onClick = {
+                            onMarkSafe()        // backend/update state
+                            onDismiss()         // close report dialog
+                            onShowMarkedSafe()  // show thank-you dialog in parent
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = UserUI.DarkBlue),
                         shape = RoundedCornerShape(18.dp),
                         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)

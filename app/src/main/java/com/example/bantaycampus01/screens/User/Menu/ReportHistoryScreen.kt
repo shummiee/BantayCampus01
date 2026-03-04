@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.user.UserHeaderBar
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
 
 @Composable
@@ -25,24 +26,28 @@ fun ReportHistoryScreen(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
+
+    // Report detail dialog
     var showDetails by remember { mutableStateOf(false) }
+
+    // ✅ success dialog
+    var showMarkedSafeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
-            // If your UserHeaderBar needs onProfile, keep it simple here
             UserHeaderBar(
                 onProfile = { navController.navigate("UserProfile_Screen") }
             )
         },
         bottomBar = {
-            // ✅ uses your existing navbar (includes SOS dialogs)
             UserNavBar(
                 modifier = Modifier,
                 navController = navController
             )
         }
     ) { padding ->
+
         Column(
             modifier = modifier
                 .padding(padding)
@@ -51,6 +56,7 @@ fun ReportHistoryScreen(
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
+
             HistoryItem(
                 timeAgo = "3 weeks ago",
                 title = "🚨 Suspicious Activity",
@@ -77,12 +83,31 @@ fun ReportHistoryScreen(
         }
     }
 
-    // ✅ popup call exactly like Admin blueprint
-    // (NO CSS changes inside ReportDetailDialog)
+    // ✅ Report detail popup
     ReportDetailDialog(
         show = showDetails,
-        onMarkSafe = { showDetails = false }, // optional auto-close
-        onDismiss = { showDetails = false }
+
+        // called when MARK SAFE is pressed
+        onMarkSafe = {
+            // backend logic later
+        },
+
+        // show thank-you popup
+        onShowMarkedSafe = {
+            showMarkedSafeDialog = true
+        },
+
+        // close the report dialog
+        onDismiss = {
+            showDetails = false
+        }
+    )
+
+    // ✅ Thank-you popup
+    MarkSafeDialog(
+        show = showMarkedSafeDialog,
+        onConfirm = { showMarkedSafeDialog = false },
+        onDismiss = { showMarkedSafeDialog = false }
     )
 }
 
@@ -94,6 +119,7 @@ private fun HistoryItem(
     status: String,
     onClick: () -> Unit
 ) {
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -102,10 +128,12 @@ private fun HistoryItem(
         colors = CardDefaults.cardColors(containerColor = UserUI.LightCard),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
+
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+
             Text(
                 text = timeAgo,
                 fontSize = 12.sp,

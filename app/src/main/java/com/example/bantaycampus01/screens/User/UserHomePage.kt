@@ -26,10 +26,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,22 +64,20 @@ fun UserHomePage(
     safetyStatus: String = "RESOLVED",
     advisoryText: String = "Due to heavy rain, some walkways may be slippery. Please take extra caution when moving around campus.",
 
-    onNotificationsClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSendReportClick: () -> Unit = {},
-    onReportHistoryClick: () -> Unit = {},
     onReportStatusClick: () -> Unit = {},
     onMarkSafeClick: () -> Unit = {}
 ) {
+
     val screenScroll = rememberScrollState()
 
-    // ✅ AdminAlertPage blueprint: dialog toggles here
     var showSendReport by rememberSaveable { mutableStateOf(false) }
     var showReportSent by rememberSaveable { mutableStateOf(false) }
     var showReportStatus by rememberSaveable { mutableStateOf(false) }
 
-    // ✅ SendReportDialog states (matches NEW SendReportDialog signature)
     var incidentExpanded by rememberSaveable { mutableStateOf(false) }
+
     val incidentOptions = listOf(
         "Suspicious Activity",
         "Medical Emergency",
@@ -87,12 +85,12 @@ fun UserHomePage(
         "Harassment",
         "Other"
     )
+
     var selectedIncident by rememberSaveable { mutableStateOf("") }
     var reportLocation by rememberSaveable { mutableStateOf("") }
     var reportDescription by rememberSaveable { mutableStateOf("") }
     var urgency by rememberSaveable { mutableStateOf(UrgencyLevel.MODERATE) }
 
-    // Optional: dot colors like admin
     val statusDotColor = when (campusStatusText.uppercase()) {
         "SAFE", "RESOLVED" -> UserUI.Green
         "CAUTION" -> Color(0xFFF4B400)
@@ -105,13 +103,14 @@ fun UserHomePage(
             .fillMaxSize()
             .background(UserUI.Bg)
     ) {
-        // ✅ Content
+
         Column(
             modifier = modifier
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
                 .verticalScroll(screenScroll)
         ) {
+
             UserHeader(
                 userName = userName,
                 onProfileClick = onProfileClick
@@ -124,7 +123,12 @@ fun UserHomePage(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = onNotificationsClick) {
+
+                IconButton(
+                    onClick = {
+                        navController.navigate("UserNotification_Screen")
+                    }
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.NotificationsNone,
                         contentDescription = "Notifications",
@@ -140,6 +144,7 @@ fun UserHomePage(
                     .background(UserUI.CardBg)
                     .padding(horizontal = 18.dp, vertical = 14.dp)
             ) {
+
                 Text(
                     text = "CAMPUS RISK LEVEL",
                     fontSize = 18.sp,
@@ -156,7 +161,9 @@ fun UserHomePage(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
+
                     Spacer(modifier = Modifier.width(6.dp))
+
                     Box(
                         modifier = Modifier
                             .size(9.dp)
@@ -178,19 +185,23 @@ fun UserHomePage(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+
                     Column(modifier = Modifier.padding(12.dp)) {
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+
                             Column(modifier = Modifier.weight(1f)) {
+
                                 Text(
                                     text = safetyTitle,
                                     fontWeight = FontWeight.Black,
                                     color = UserUI.DarkBlue,
                                     fontSize = 20.sp
                                 )
+
                                 Text(
                                     text = safetyTime,
                                     color = UserUI.DarkBlue.copy(alpha = 0.75f),
@@ -201,20 +212,23 @@ fun UserHomePage(
                             Surface(
                                 onClick = onMarkSafeClick,
                                 shape = RoundedCornerShape(22.dp),
-                                color = UserUI.DarkBlue,
-                                tonalElevation = 0.dp
+                                color = UserUI.DarkBlue
                             ) {
+
                                 Row(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+
                                     Text(
                                         text = "MARK SAFE",
                                         color = Color.White,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 10.sp
                                     )
+
                                     Spacer(modifier = Modifier.width(6.dp))
+
                                     Box(
                                         modifier = Modifier
                                             .size(14.dp)
@@ -222,6 +236,7 @@ fun UserHomePage(
                                             .background(UserUI.Green),
                                         contentAlignment = Alignment.Center
                                     ) {
+
                                         Text(
                                             text = "✓",
                                             color = Color.White,
@@ -242,10 +257,12 @@ fun UserHomePage(
                                 .background(UserUI.LightCard)
                                 .padding(12.dp)
                         ) {
+
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
+
                                 Text(
                                     text = safetyMessage,
                                     fontWeight = FontWeight.Black,
@@ -253,15 +270,20 @@ fun UserHomePage(
                                     fontSize = 18.sp,
                                     textAlign = TextAlign.Center
                                 )
+
                                 Spacer(modifier = Modifier.height(4.dp))
+
                                 Row(verticalAlignment = Alignment.CenterVertically) {
+
                                     Text(
                                         text = "Status: $safetyStatus",
                                         fontWeight = FontWeight.Bold,
                                         color = UserUI.DarkBlue,
                                         fontSize = 16.sp
                                     )
+
                                     Spacer(modifier = Modifier.width(6.dp))
+
                                     Box(
                                         modifier = Modifier
                                             .size(9.dp)
@@ -290,11 +312,13 @@ fun UserHomePage(
                     .padding(horizontal = 18.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    ActionPillButton(
+
+                    ActionButton(
                         title = "SEND REPORT",
                         bg = UserUI.DangerRed,
                         fg = Color.White,
@@ -302,15 +326,17 @@ fun UserHomePage(
                         onClick = { showSendReport = true }
                     )
 
-                    ActionPillButton(
+                    ActionButton(
                         title = "REPORT\nHISTORY",
                         bg = UserUI.PaleBlueCard,
                         fg = UserUI.DarkBlue,
                         icon = R.drawable.cases,
-                        onClick = onReportHistoryClick
+                        onClick = {
+                            navController.navigate("UserReportHistory_Screen")
+                        }
                     )
 
-                    ActionPillButton(
+                    ActionButton(
                         title = "REPORT\nSTATUS",
                         bg = UserUI.PaleBlueCard,
                         fg = UserUI.DarkBlue,
@@ -324,12 +350,14 @@ fun UserHomePage(
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = UserUI.CardBg)
                 ) {
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+
                         Text(
                             text = "CAMPUS\nADVISORY",
                             color = Color.White,
@@ -348,6 +376,7 @@ fun UserHomePage(
                                 .background(Color.White)
                                 .padding(10.dp)
                         ) {
+
                             Text(
                                 text = advisoryText,
                                 color = UserUI.DarkBlue,
@@ -375,42 +404,28 @@ fun UserHomePage(
             Spacer(modifier = Modifier.height(90.dp))
         }
 
-        // ✅ navbar pinned
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             UserNavBar(modifier = Modifier, navController = navController)
         }
 
-        // ✅ AdminAlertPage blueprint: POPUPS CALLED HERE
-
         SendReportDialog(
             show = showSendReport,
-
             incidentExpanded = incidentExpanded,
             onIncidentExpandedChange = { incidentExpanded = it },
             incidentOptions = incidentOptions,
             selectedIncident = selectedIncident,
             onSelectedIncidentChange = { selectedIncident = it },
-
             location = reportLocation,
             onLocationChange = { reportLocation = it },
             description = reportDescription,
             onDescriptionChange = { reportDescription = it },
-
             urgency = urgency,
             onUrgencyChange = { urgency = it },
-
-            onUploadClick = { /* TODO: pick image */ },
-
+            onUploadClick = { },
             onSubmit = {
                 onSendReportClick()
                 showSendReport = false
                 showReportSent = true
-
-                // clear
-                selectedIncident = ""
-                reportLocation = ""
-                reportDescription = ""
-                urgency = UrgencyLevel.MODERATE
             },
             onDismiss = { showSendReport = false }
         )
@@ -422,14 +437,6 @@ fun UserHomePage(
 
         ReportDetailDialog(
             show = showReportStatus,
-            reportIdLabel = "Report ID: #BC-2026-0145",
-            statusLabel = "Responding",
-            category = "🚨 Suspicious Activity",
-            dateTime = "Feb 3, 2026 – 9:23AM",
-            location = "Near Library Entrance",
-            description = "There is a person acting suspiciously near the stairs, checking doors and following students.",
-            hasAttachment = true,
-            onViewAttachment = { /* TODO: view image */ },
             onMarkSafe = {
                 onReportStatusClick()
                 showReportStatus = false
@@ -440,7 +447,7 @@ fun UserHomePage(
 }
 
 @Composable
-private fun ActionPillButton(
+private fun ActionButton(
     title: String,
     bg: Color,
     fg: Color,
@@ -466,8 +473,7 @@ private fun ActionPillButton(
                 contentDescription = null,
                 modifier = Modifier.size(35.dp)
             )
-
-            Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(10.dp))
 
             Text(
                 text = title,
@@ -476,7 +482,6 @@ private fun ActionPillButton(
                 color = fg,
                 lineHeight = 16.sp,
                 textAlign = TextAlign.Center
-            )
-        }
+            ) }
     }
 }

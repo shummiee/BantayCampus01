@@ -1,6 +1,7 @@
 package com.example.bantaycampus01.screens.User.Menu
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,46 +9,99 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.bantaycampus01.partials.user.*
+import androidx.navigation.NavController
+import com.example.bantaycampus01.partials.user.UserHeader
+import com.example.bantaycampus01.partials.user.UserNavBar
+import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
+
+// ✅ "Code name" so backend can differentiate later
+enum class NotificationCode {
+    SUSPICIOUS_ACTIVITY,
+    ANNOUNCEMENT
+}
+
+data class NotificationItem(
+    val code: NotificationCode,
+    val time: String,
+    val title: String,
+    val subtitle: String,
+    val statusText: String = "",
+    val statusDot: Color? = null,
+    val leading: String = "🚨",
+    val isQuoteSubtitle: Boolean = false
+)
 
 @Composable
 fun NotificationsScreen(
-    onHome: () -> Unit,
-    onShield: () -> Unit,
-    onSos: () -> Unit,
-    onAlert: () -> Unit,
-    onProfile: () -> Unit,
-    onViewDetails: () -> Unit
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    userName: String = "User"
 ) {
+    // ✅ Admin blueprint: dialog toggle
+    var showReportDetail by rememberSaveable { mutableStateOf(false) }
+
+    // Sample list (replace with backend later)
+    val notifications = remember {
+        listOf(
+            NotificationItem(
+                code = NotificationCode.SUSPICIOUS_ACTIVITY,
+                time = "1 minute ago",
+                title = "Suspicious Activity",
+                subtitle = "Near Library Entrance",
+                statusText = "Status: Responding",
+                statusDot = Color(0xFFF4B400),
+                leading = "🚨"
+            ),
+            NotificationItem(
+                code = NotificationCode.SUSPICIOUS_ACTIVITY,
+                time = "5 minutes ago",
+                title = "Suspicious Activity",
+                subtitle = "Near Library Entrance",
+                statusText = "Status: Resolved",
+                statusDot = UserUI.Green,
+                leading = "🚨"
+            ),
+            NotificationItem(
+                code = NotificationCode.ANNOUNCEMENT,
+                time = "25 minutes ago",
+                title = "New Annoucement",
+                subtitle = "“There’s an chuchuchu...”",
+                leading = "📣",
+                isQuoteSubtitle = true
+            )
+        )
+    }
+
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
-            // Wireframe uses the "Hi User" header
-            UserHeaderBar(onProfile = onProfile)
+            // ✅ Use UserHeader instead of UserHeaderBar
+            UserHeader(
+                userName = userName,
+                onProfileClick = { navController.navigate("UserProfile_Screen") }
+            )
         },
         bottomBar = {
-            UserBottomNavBar(
-                onHome = onHome,
-                onShield = onShield,
-                onSos = onSos,
-                onAlert = onAlert,
-                onProfile = onProfile
-            )
+            UserNavBar(modifier = Modifier, navController = navController)
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(padding)
                 .fillMaxSize()
                 .padding(horizontal = 18.dp)
-                .padding(top = 14.dp, bottom = 110.dp)
+                .padding(top = 14.dp, bottom = 110.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 text = "NOTIFICATION",
@@ -56,57 +110,56 @@ fun NotificationsScreen(
                 color = UserUI.DarkBlue
             )
 
-            Spacer(Modifier.height(14.dp))
-
-            NotificationRow(
-                title = "Suspicious Activity",
-                subtitle = "Near Library Entrance",
-                statusText = "Status: Responding",
-                statusDot = UserUI.DangerRed,
-                time = "1 minute ago",
-                onClick = onViewDetails
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            NotificationRow(
-                title = "Suspicious Activity",
-                subtitle = "Near Library Entrance",
-                statusText = "Status: Resolved",
-                statusDot = UserUI.Green,
-                time = "5 minutes ago",
-                onClick = onViewDetails
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            NotificationRow(
-                title = "New Announcement",
-                subtitle = "There’s an chuchuchu...",
-                statusText = "",
-                statusDot = null,
-                time = "25 minutes ago",
-                onClick = onViewDetails
-            )
+            notifications.forEach { item ->
+                NotificationRow(
+                    item = item,
+                    onClick = {
+                        when (item.code) {
+                            NotificationCode.SUSPICIOUS_ACTIVITY -> {
+                                showReportDetail = true
+                            }
+                            NotificationCode.ANNOUNCEMENT -> {
+                                navController.navigate("UserSafety_Screen")
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
+
+    // ✅ Popup for suspicious activity (Admin blueprint)
+    ReportDetailDialog(
+        show = showReportDetail,
+        reportIdLabel = "Report ID: #BC-2026-0145",
+        statusLabel = "Responding",
+        category = "🚨 Suspicious Activity",
+        dateTime = "Feb 3, 2026 – 9:23AM",
+        location = "Near Library Entrance",
+        description = "There is a person acting suspiciously near the stairs, checking doors and following students.",
+        hasAttachment = true,
+        onViewAttachment = { /* TODO */ },
+        onMarkSafe = { showReportDetail = false },
+        onDismiss = { showReportDetail = false }
+    )
 }
 
 @Composable
 private fun NotificationRow(
-    title: String,
-    subtitle: String,
-    statusText: String,
-    statusDot: Color?,
-    time: String,
+    item: NotificationItem,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(14.dp)
+    val borderColor = UserUI.DarkBlue.copy(alpha = 0.55f)
+    val cardBg = Color(0xFFE6E6E6)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .border(1.dp, borderColor, shape)
             .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFEFEF)),
+        shape = shape,
+        colors = CardDefaults.cardColors(containerColor = cardBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -115,35 +168,71 @@ private fun NotificationRow(
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("📍", fontSize = 12.sp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = item.leading, fontSize = 14.sp)
                     Spacer(Modifier.width(6.dp))
-                    Text(title, fontWeight = FontWeight.Black, fontSize = 12.sp, color = UserUI.DarkBlue)
+                    Text(
+                        text = item.title,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp,
+                        color = UserUI.DarkBlue
+                    )
                     Spacer(Modifier.weight(1f))
-                    Text(time, fontSize = 10.sp, color = UserUI.DarkBlue.copy(alpha = 0.65f))
+                    Text(
+                        text = item.time,
+                        fontSize = 11.sp,
+                        fontStyle = FontStyle.Italic,
+                        color = UserUI.DarkBlue.copy(alpha = 0.70f)
+                    )
                 }
 
-                Spacer(Modifier.height(4.dp))
-                Text(subtitle, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = UserUI.DarkBlue)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!item.isQuoteSubtitle) {
+                        Text(text = "📍", fontSize = 12.sp)
+                        Spacer(Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = item.subtitle,
+                        fontSize = 12.sp,
+                        fontWeight = if (item.isQuoteSubtitle) FontWeight.Medium else FontWeight.SemiBold,
+                        fontStyle = if (item.isQuoteSubtitle) FontStyle.Italic else FontStyle.Normal,
+                        color = UserUI.DarkBlue
+                    )
+                }
 
-                if (statusText.isNotBlank()) {
-                    Spacer(Modifier.height(4.dp))
+                if (item.statusText.isNotBlank()) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(statusText, fontSize = 10.sp, color = UserUI.DarkBlue.copy(alpha = 0.8f))
-                        if (statusDot != null) {
-                            Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = item.statusText,
+                            fontSize = 12.sp,
+                            color = UserUI.DarkBlue
+                        )
+                        if (item.statusDot != null) {
+                            Spacer(Modifier.width(8.dp))
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp)
-                                    .background(statusDot, RoundedCornerShape(50))
+                                    .size(10.dp)
+                                    .background(item.statusDot, RoundedCornerShape(50))
                             )
                         }
                     }
                 }
             }
 
-            Text("→", fontSize = 18.sp, fontWeight = FontWeight.Black, color = UserUI.DarkBlue)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                text = "→",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
+                color = UserUI.DarkBlue
+            )
         }
     }
 }

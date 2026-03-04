@@ -1,4 +1,4 @@
-/*package com.example.bantaycampus01.screens.User.Menu
+package com.example.bantaycampus01.screens.User.Menu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,41 +14,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.bantaycampus01.partials.user.*
+import androidx.navigation.NavController
+import com.example.bantaycampus01.partials.user.UserHeaderBar
+import com.example.bantaycampus01.partials.user.UserNavBar
+import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
 
 @Composable
 fun ReportHistoryScreen(
-    onHome: () -> Unit,
-    onShield: () -> Unit,
-    onSos: () -> Unit,
-    onAlert: () -> Unit,
-    onProfile: () -> Unit,
-    onAddDetails: () -> Unit
+    modifier: Modifier = Modifier,
+    navController: NavController
 ) {
     var showDetails by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = UserUI.Bg,
-        topBar = { UserHeaderBar(onProfile = onProfile) },
+        topBar = {
+            // If your UserHeaderBar needs onProfile, keep it simple here
+            UserHeaderBar(
+                onProfile = { navController.navigate("UserProfile_Screen") }
+            )
+        },
         bottomBar = {
-            UserBottomNavBar(
-                onHome = onHome,
-                onShield = onShield,
-                onSos = onSos,
-                onAlert = onAlert,
-                onProfile = onProfile
+            // ✅ uses your existing navbar (includes SOS dialogs)
+            UserNavBar(
+                modifier = Modifier,
+                navController = navController
             )
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(padding)
                 .fillMaxSize()
                 .background(UserUI.Bg)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // timestamps like in wireframe p.11
             HistoryItem(
                 timeAgo = "3 weeks ago",
                 title = "🚨 Suspicious Activity",
@@ -75,12 +77,13 @@ fun ReportHistoryScreen(
         }
     }
 
-    if (showDetails) {
-        ReportDetailDialog(
-            onClose = { showDetails = false },
-            onAddDetails = onAddDetails
-        )
-    }
+    // ✅ popup call exactly like Admin blueprint
+    // (NO CSS changes inside ReportDetailDialog)
+    ReportDetailDialog(
+        show = showDetails,
+        onMarkSafe = { showDetails = false }, // optional auto-close
+        onDismiss = { showDetails = false }
+    )
 }
 
 @Composable
@@ -99,7 +102,10 @@ private fun HistoryItem(
         colors = CardDefaults.cardColors(containerColor = UserUI.LightCard),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             Text(
                 text = timeAgo,
                 fontSize = 12.sp,
@@ -133,4 +139,4 @@ private fun HistoryItem(
             )
         }
     }
-}*/
+}

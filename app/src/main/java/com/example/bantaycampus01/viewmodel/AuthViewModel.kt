@@ -27,6 +27,11 @@ class AuthViewModel : ViewModel() {
     fun register(
         email : String,
         name : String,
+        contactNumber : String,
+        idNumber : String,
+        department : String,
+        dob : String,
+
         password: String,
         onResult: (Boolean, String?)-> Unit){
         auth.createUserWithEmailAndPassword(email,password)
@@ -34,7 +39,7 @@ class AuthViewModel : ViewModel() {
                 if(it.isSuccessful) {
                     var userId = it.result?.user?.uid
 
-                    val userModel = UserModel(name, email, userId!!)
+                    val userModel = UserModel(name, email, contactNumber, idNumber, department, dob, userId!!)
                     firestore.collection("users").document(userId)
                         .set(userModel)
                         .addOnCompleteListener { dbTask->

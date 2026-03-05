@@ -1,6 +1,7 @@
 package com.example.bantaycampus01.screens
 
 import android.app.DatePickerDialog
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -39,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -67,6 +70,7 @@ fun RegistrationScreen(
     navController: NavController,
     authViewModel: AuthViewModel = viewModel()
 ) {
+    val focusManager = LocalFocusManager.current
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
 
@@ -77,6 +81,7 @@ fun RegistrationScreen(
     var contactNumber by remember { mutableStateOf("") }
     var idNumber by remember { mutableStateOf("") }
     var department by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("") }
 
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -106,6 +111,9 @@ fun RegistrationScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(White)
+            .clickable {
+                focusManager.clearFocus()
+            }
     ) {
         Box(
             modifier = Modifier
@@ -130,6 +138,7 @@ fun RegistrationScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .padding(top = 150.dp)
                 .background(White)
                 .verticalScroll(scrollState)
@@ -154,7 +163,7 @@ fun RegistrationScreen(
             SoftField(
                 value = name,
                 onValueChange = { name = it },
-                placeholder = "Name",
+                placeholder = "Enter Full Name",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Text,
                 isPassword = false,
@@ -167,7 +176,7 @@ fun RegistrationScreen(
             SoftField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = "Email",
+                placeholder = "Enter Email",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Email,
                 isPassword = false,
@@ -216,7 +225,7 @@ fun RegistrationScreen(
             SoftField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = "Password",
+                placeholder = "Enter Password",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Password,
                 isPassword = true,
@@ -289,12 +298,13 @@ fun RegistrationScreen(
 
                     // NOTE: your current register() only accepts (email, name, password)
                     // When you update backend, include contactNumber/idNumber/department/dob.
-                    authViewModel.register(email, name, contactNumber, idNumber, department, dob, password) { success, errorMessage ->
+                    authViewModel.register(email, name, contactNumber, idNumber, department, dob, role, password) { success, errorMessage ->
                         if (success) {
                             isLoading = false
                             navController.navigate("Login_Screen") {
                                 popUpTo("Registration_Screen") { inclusive = true }
                             }
+                            Toast.makeText(context, "Account Created", Toast.LENGTH_SHORT).show()
                         } else {
                             isLoading = false
                             AppUtil.showToast(context, errorMessage ?: "Something went wrong")

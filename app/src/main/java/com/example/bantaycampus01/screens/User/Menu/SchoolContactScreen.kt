@@ -12,17 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.user.*
 
 @Composable
 fun SchoolContactsScreen(
-    onReturn: () -> Unit,
-    onHome: () -> Unit,
-    onShield: () -> Unit,
-    onSos: () -> Unit,
-    onAlert: () -> Unit,
-    onProfile: () -> Unit,
-    onAddDetails: () -> Unit // not used, keep for compatibility
+    modifier: Modifier = Modifier,
+    navController: NavController
 ) {
     Scaffold(
         containerColor = UserUI.Bg,
@@ -30,21 +26,21 @@ fun SchoolContactsScreen(
             UserTopBar(
                 title = "",
                 showReturn = true,
-                onReturn = onReturn
+                onReturn = { navController.popBackStack() }
             )
         },
         bottomBar = {
             UserBottomNavBar(
-                onHome = onHome,
-                onShield = onShield,
-                onSos = onSos,
-                onAlert = onAlert,
-                onProfile = onProfile
+                onHome = { navController.navigate("UserHomePage_Screen") },
+                onShield = { navController.navigate("UserSafety_Screen") },
+                onSos = { /* TODO: navController.navigate("UserSos_Screen") */ },
+                onAlert = { navController.navigate("UserAlert_Screen") },
+                onProfile = { navController.navigate("UserProfile_Screen") }
             )
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(padding)
                 .fillMaxSize()
                 .padding(horizontal = 18.dp)

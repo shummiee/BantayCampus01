@@ -167,22 +167,26 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             Button(
                 onClick = {
                     isLoading = true
-                    authViewModel.login(email, password){
-                            success,errorMessage->
-                        if(success) {
-                            isLoading = false
-                            navController.navigate("UserHomePage_Screen"){
-                                popUpTo("Login_Screen"){inclusive=true}
+                    authViewModel.login(email, password) { success, errorMessage, role ->
+
+                        if (success) {
+
+                            if (role == "ADMIN") {
+
+                                navController.navigate("AdminHomepage_Screen"){
+                                popUpTo("Login_Screen") { inclusive = true }}
+
+                            } else {
+
+                                navController.navigate("UserHomePage_Screen"){
+                                    popUpTo("Login_Screen") { inclusive = true }}
+
                             }
-                        //**************************HARD CODED ADMIN LOGIN CREDENTIALS****************************//
-                        }else if(email == "admin" && password == "admin"){
-                            isLoading = false
-                            navController.navigate("AdminHomepage_Screen"){
-                                popUpTo("Login_Screen"){inclusive=true}
-                            }
-                        }else{
-                            isLoading = false
-                            AppUtil.showToast(context,errorMessage?:"Something went wrong")
+
+                        } else {
+
+                            AppUtil.showToast(context, errorMessage ?: "Login Failed")
+
                         }
                     }
                 },

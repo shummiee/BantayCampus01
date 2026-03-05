@@ -5,7 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -17,9 +17,22 @@ import com.example.bantaycampus01.ui.theme.*
 @Composable
 fun AdminStatusTimelineDialog(
     show: Boolean,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onCaseSolved: () -> Unit = {}
 ) {
     if (!show) return
+
+    var showConfirmDialog by remember { mutableStateOf(false) }
+
+    AdminCaseSolveConfirmDialog(
+        show = showConfirmDialog,
+        onDismiss = { showConfirmDialog = false },
+        onConfirm = {
+            showConfirmDialog = false
+            onCaseSolved()
+            onDismiss()
+        }
+    )
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -66,6 +79,29 @@ fun AdminStatusTimelineDialog(
                 TimelineRow("9:26 AM", "Guard Dispatched")
                 HorizontalDivider()
                 TimelineRow("(Pending)", "Case Resolved")
+
+                Spacer(Modifier.height(16.dp))
+
+                Button(
+                    onClick = { showConfirmDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .height(42.dp)
+                        .widthIn(min = 160.dp),
+                    shape = RoundedCornerShape(999.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = TextOnWhite
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp)
+                ) {
+                    Text(
+                        text = "CASE SOLVE",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(Modifier.height(6.dp))
             }
         }
     }

@@ -131,7 +131,7 @@ fun AccountInfoScreen(
                     )
                     InfoRowTable("E-mail Address", "saCena@mmc.edu.ph", dividerColor = tableDivider)
                     InfoRowTable("Contact Number", "0939 815 4694", dividerColor = tableDivider)
-                    InfoRowTable("Department/Course", "CEA - BS Computer Engineering", dividerColor = tableDivider)
+                    InfoRowTable("Department", "CEA", dividerColor = tableDivider)
                     InfoRowTable("Year Level", "3rd Year", dividerColor = tableDivider)
 
                     // ✅ Pencil opens ChangePasswordDialog

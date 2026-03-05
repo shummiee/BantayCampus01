@@ -26,7 +26,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Label
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -63,7 +62,11 @@ import com.example.bantaycampus01.viewmodel.AuthViewModel
 import java.util.Calendar
 
 @Composable
-fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavController,authViewModel: AuthViewModel = viewModel()){
+fun RegistrationScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
 
@@ -71,6 +74,10 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    var contactNumber by remember { mutableStateOf("") }
+    var idNumber by remember { mutableStateOf("") }
+    var department by remember { mutableStateOf("") }
+
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
@@ -99,7 +106,6 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
             .fillMaxSize()
             .background(White)
     ) {
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,16 +126,15 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
             }
         }
 
-        // ✅ Scrollable content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 150.dp)
                 .background(White)
-                .verticalScroll(scrollState) // ✅ scroll enabled
+                .verticalScroll(scrollState)
                 .padding(horizontal = 30.dp)
                 .padding(top = 28.dp)
-                .padding(bottom = 30.dp),     // ✅ extra bottom space
+                .padding(bottom = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -144,7 +149,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Name
             SoftField(
                 value = name,
                 onValueChange = { name = it },
@@ -157,7 +162,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Email
             SoftField(
                 value = email,
                 onValueChange = { email = it },
@@ -170,7 +175,43 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            SoftField(
+                value = contactNumber,
+                onValueChange = { contactNumber = it },
+                placeholder = "Enter Contact Number",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Number,
+                isPassword = false,
+                showPassword = true
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            SoftField(
+                value = idNumber,
+                onValueChange = { idNumber = it },
+                placeholder = "Enter ID Number",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Number,
+                isPassword = false,
+                showPassword = true
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            SoftField(
+                value = department,
+                onValueChange = { department = it },
+                placeholder = "Enter Department",
+                bg = fieldBg,
+                keyboardType = KeyboardType.Text,
+                isPassword = false,
+                showPassword = true
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Password
             SoftField(
                 value = password,
                 onValueChange = { password = it },
@@ -183,7 +224,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Confirm Password
             SoftField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
@@ -227,7 +268,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (dob.isBlank()) "Select" else dob,
+                    text = if (dob.isBlank()) "Birthdate" else dob,
                     color = if (dob.isBlank()) TextBoxPlaceholder else TextBoxText,
                     fontSize = 13.sp,
                     modifier = Modifier.weight(1f)
@@ -244,17 +285,18 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
             Button(
                 onClick = {
                     isLoading = true
-                    authViewModel.register(email, name, password){
-                        success,errorMessage->
-                        if(success) {
-                            isLoading = false
-                            navController.navigate("Login_Screen"){
-                                popUpTo("Registration_Screen"){inclusive=true}
-                            }
 
-                        }else{
+                    // NOTE: your current register() only accepts (email, name, password)
+                    // When you update backend, include contactNumber/idNumber/department/dob.
+                    authViewModel.register(email, name, password) { success, errorMessage ->
+                        if (success) {
                             isLoading = false
-                            AppUtil.showToast(context,errorMessage?:"Something went wrong")
+                            navController.navigate("Login_Screen") {
+                                popUpTo("Registration_Screen") { inclusive = true }
+                            }
+                        } else {
+                            isLoading = false
+                            AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                         }
                     }
                 },
@@ -266,8 +308,7 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
                 colors = ButtonDefaults.buttonColors(containerColor = headerColor)
             ) {
                 Text(
-                    text = if(isLoading) "Creating Account" else
-                    "SIGN UP",
+                    text = if (isLoading) "Creating Account" else "SIGN UP",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextOnDark
@@ -287,25 +328,13 @@ fun RegistrationScreen(modifier: Modifier = Modifier, navController: NavControll
                     fontSize = 12.sp,
                     color = TextOnWhite,
                     textDecoration = TextDecoration.Underline,
-                    modifier = Modifier.clickable { navController.navigate("Login_Screen")}
+                    modifier = Modifier.clickable { navController.navigate("Login_Screen") }
                 )
             }
 
-            // ✅ extra space so last line is never cramped
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
-}
-
-@Composable
-private fun Label(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.fillMaxWidth(),
-        fontSize = 11.sp,
-        letterSpacing = 1.sp,
-        color = SubTextLabel
-    )
 }
 
 @Composable

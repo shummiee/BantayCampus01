@@ -12,14 +12,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
 import androidx.navigation.NavController
-import com.example.bantaycampus01.partials.user.*
+import com.example.bantaycampus01.partials.user.UserNavBar
+import com.example.bantaycampus01.partials.user.UserTopBar
+import com.example.bantaycampus01.partials.user.UserUI
 
 @Composable
 fun SchoolContactsScreen(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
+    // ✅ Do NOT use bottomBar; pin UserNavBar like UserProfileScreen
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
@@ -28,46 +32,52 @@ fun SchoolContactsScreen(
                 showReturn = true,
                 onReturn = { navController.popBackStack() }
             )
-        },
-        bottomBar = {
-            UserBottomNavBar(
-                onHome = { navController.navigate("UserHomePage_Screen") },
-                onShield = { navController.navigate("UserSafety_Screen") },
-                onSos = { /* TODO: navController.navigate("UserSos_Screen") */ },
-                onAlert = { navController.navigate("UserAlert_Screen") },
-                onProfile = { navController.navigate("UserProfile_Screen") }
-            )
         }
     ) { padding ->
-        Column(
-            modifier = modifier
-                .padding(padding)
+        Box(
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp)
-                .padding(top = 10.dp, bottom = 110.dp)
+                .background(UserUI.Bg)
         ) {
-            Text(
-                text = "School’s Emergency Contacts",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = UserUI.DarkBlue
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                colors = CardDefaults.cardColors(containerColor = UserUI.PaleBlueCard),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            Column(
+                modifier = modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp) // ✅ space for UserNavBar
+                    .padding(horizontal = 18.dp)
+                    .padding(top = 10.dp)
             ) {
-                Column {
-                    ContactRow("School Clinic", "+63 912 345 6789")
-                    DividerLine()
-                    ContactRow("Guard House", "+63 912 345 6789")
-                    DividerLine()
-                    ContactRow("Admin", "+63 912 345 6789")
+                Text(
+                    text = "School’s Emergency Contacts",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UserUI.DarkBlue
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(containerColor = UserUI.PaleBlueCard),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column {
+                        ContactRow("School Clinic", "+63 912 345 6789")
+                        DividerLine()
+                        ContactRow("Guard House", "+63 912 345 6789")
+                        DividerLine()
+                        ContactRow("Admin", "+63 912 345 6789")
+                    }
                 }
+            }
+
+            // ✅ Bottom pinned navbar (UserNavBar.kt)
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                UserNavBar(
+                    modifier = Modifier,
+                    navController = navController
+                )
             }
         }
     }

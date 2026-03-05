@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.partials.user.UserBottomNavBar
+import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserTopBar
 import com.example.bantaycampus01.partials.user.UserUI
 
@@ -34,6 +34,7 @@ fun AboutUsScreen(
     val cardBorder = Color(0xFF6F7A8E)    // gray-blue border
     val textColor = Color(0xFF22304A)
 
+    // ✅ No bottomBar here; we'll pin UserNavBar like UserProfileScreen
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
@@ -42,96 +43,104 @@ fun AboutUsScreen(
                 showReturn = true,
                 onReturn = { navController.popBackStack() }
             )
-        },
-        bottomBar = {
-            UserBottomNavBar(
-                onHome = { navController.navigate("UserHomePage_Screen") },
-                onShield = { navController.navigate("UserSafety_Screen") },
-                onSos = { /* TODO: navController.navigate("UserSos_Screen") */ },
-                onAlert = { navController.navigate("UserAlert_Screen") },
-                onProfile = { navController.navigate("UserProfile_Screen") }
-            )
         }
     ) { padding ->
-        Column(
-            modifier = modifier
-                .padding(padding)
+        Box(
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp)
-                .padding(top = 12.dp, bottom = 110.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(UserUI.Bg)
         ) {
-            Text(
-                text = "ABOUT US",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black,
-                color = UserUI.DarkBlue
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // ✅ Gray bordered info card like screenshot
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(cardBg)
-                    .border(1.dp, cardBorder, RoundedCornerShape(18.dp))
-                    .padding(horizontal = 16.dp, vertical = 14.dp)
+                modifier = modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp) // ✅ space for UserNavBar
+                    .padding(horizontal = 18.dp)
+                    .padding(top = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "BantayCampus is a mobile-based\nreal-time safety monitoring system\ndesigned to enhance the security and\nwell-being of students and staff\nwithin the campus. The application\nprovides a fast and reliable way to\nreport emergencies, receive safety\nupdates, and stay informed about\ncurrent campus conditions.",
-                    color = textColor,
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    text = "ABOUT US",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black,
+                    color = UserUI.DarkBlue
                 )
 
                 Spacer(Modifier.height(12.dp))
 
+                // ✅ Gray bordered info card like screenshot
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(cardBg)
+                        .border(1.dp, cardBorder, RoundedCornerShape(18.dp))
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
+                ) {
+                    Text(
+                        text = "BantayCampus is a mobile-based\nreal-time safety monitoring system\ndesigned to enhance the security and\nwell-being of students and staff\nwithin the campus. The application\nprovides a fast and reliable way to\nreport emergencies, receive safety\nupdates, and stay informed about\ncurrent campus conditions.",
+                        color = textColor,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        text = "Your campus. Your safety. Our priority.",
+                        color = textColor,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Spacer(Modifier.height(18.dp))
+
                 Text(
-                    text = "Your campus. Your safety. Our priority.",
-                    color = textColor,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    text = "DEVELOPERS",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = UserUI.DarkBlue
                 )
+
+                Spacer(Modifier.height(12.dp))
+
+                DeveloperRowCard(
+                    name = "Sharmayne Cena",
+                    course = "BS Computer Engineering",
+                    role = "Front End and Back End Developer",
+                    avatarRes = R.drawable.avatar, // replace if you have a better dev image
+                    cardBg = cardBg,
+                    cardBorder = cardBorder,
+                    textColor = textColor
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                DeveloperRowCard(
+                    name = "Christina Sevilla",
+                    course = "BS Computer Engineering",
+                    role = "Front End and Back End Developer",
+                    avatarRes = R.drawable.avatar, // replace if you have a better dev image
+                    cardBg = cardBg,
+                    cardBorder = cardBorder,
+                    textColor = textColor
+                )
+
+                Spacer(Modifier.height(12.dp))
             }
 
-            Spacer(Modifier.height(18.dp))
-
-            Text(
-                text = "DEVELOPERS",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Black,
-                color = UserUI.DarkBlue
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            DeveloperRowCard(
-                name = "Sharmayne Cena",
-                course = "BS Computer Engineering",
-                role = "Front End and Back End Developer",
-                avatarRes = R.drawable.avatar, // replace if you have a better dev image
-                cardBg = cardBg,
-                cardBorder = cardBorder,
-                textColor = textColor
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            DeveloperRowCard(
-                name = "Christina Sevilla",
-                course = "BS Computer Engineering",
-                role = "Front End and Back End Developer",
-                avatarRes = R.drawable.avatar, // replace if you have a better dev image
-                cardBg = cardBg,
-                cardBorder = cardBorder,
-                textColor = textColor
-            )
+            // ✅ Bottom pinned navbar (UserNavBar.kt)
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                UserNavBar(
+                    modifier = Modifier,
+                    navController = navController
+                )
+            }
         }
     }
 }

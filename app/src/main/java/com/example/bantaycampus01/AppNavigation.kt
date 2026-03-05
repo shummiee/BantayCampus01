@@ -10,6 +10,7 @@ import com.example.bantaycampus01.screens.Admin.AdminAlertPage
 import com.example.bantaycampus01.screens.Admin.AdminAlertPageDetails
 import com.example.bantaycampus01.screens.Admin.AdminCheckInPage
 import com.example.bantaycampus01.screens.Admin.AdminHomePage
+import com.example.bantaycampus01.screens.Admin.AdminProfileScreen
 import com.example.bantaycampus01.screens.Admin.AdminSafetyPage
 import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
@@ -61,6 +62,9 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("AdminAlertHistory_Screen"){
             AdminAlertHistory(modifier, navController)
+        }
+        composable("AdminProfile_Screen"){
+            AdminProfileScreen(modifier, navController)
         }
         //********************************USER******************************
         composable("UserHomePage_Screen"){

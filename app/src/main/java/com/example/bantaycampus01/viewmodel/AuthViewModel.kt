@@ -107,4 +107,36 @@ class AuthViewModel : ViewModel() {
             onResult(null)
         }
     }
+
+    fun getUserProfile(onResult: (String?, String?, String?, String?, String?, String?) -> Unit) {
+
+        val uid = auth.currentUser?.uid
+
+        if (uid != null) {
+
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+
+                    val name = document.getString("name")
+                    val email = document.getString("email")
+                    val contactNumber = document.getString("contactNumber")
+                    val idNumber = document.getString("idNUmber")
+                    val department = document.getString("department")
+                    val role = document.getString("role")
+
+
+                    onResult(name,email,contactNumber,idNumber,department, role)
+
+                }
+                .addOnFailureListener {
+                    onResult(null, null, null, null, null, null)
+                }
+
+        } else {
+            onResult(null, null, null, null, null, null)
+        }
+    }
 }

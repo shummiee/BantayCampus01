@@ -1,4 +1,4 @@
-package com.example.bantaycampus01.screens.User
+package com.example.bantaycampus01.screens.Admin
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -51,7 +51,7 @@ import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
-fun UserProfileScreen(
+fun AdminProfileScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
 ) {

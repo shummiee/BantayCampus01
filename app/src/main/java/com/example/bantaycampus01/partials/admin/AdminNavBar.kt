@@ -14,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.R
+import com.example.bantaycampus01.screens.Admin.AdminProfileScreen
 import com.example.bantaycampus01.ui.theme.*
 
 @Composable
@@ -60,7 +61,7 @@ fun AdminNavBar(
             BottomNavSlot(
                 res = R.drawable.profile,
                 contentDescription = "Profile",
-                onClick = {  },
+                onClick = { navController.navigate("AdminProfile_Screen") },
                 modifier = Modifier.weight(1f)
             )
         }

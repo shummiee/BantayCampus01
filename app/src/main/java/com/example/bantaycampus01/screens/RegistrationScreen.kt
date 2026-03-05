@@ -82,6 +82,7 @@ fun RegistrationScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var dob by remember { mutableStateOf("") }
+
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -288,7 +289,7 @@ fun RegistrationScreen(
 
                     // NOTE: your current register() only accepts (email, name, password)
                     // When you update backend, include contactNumber/idNumber/department/dob.
-                    authViewModel.register(email, name, password) { success, errorMessage ->
+                    authViewModel.register(email, name, contactNumber, idNumber, department, dob, password) { success, errorMessage ->
                         if (success) {
                             isLoading = false
                             navController.navigate("Login_Screen") {

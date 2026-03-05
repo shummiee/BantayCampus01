@@ -9,6 +9,11 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -16,16 +21,28 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.SubTextLabel
 import com.example.bantaycampus01.ui.theme.TextOnWhite
+import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
 fun UserHeader(
-    userName: String,
     onProfileClick: () -> Unit = {}
 ) {
+
+    val authViewModel = viewModel<AuthViewModel>()
+
+    var username by remember { mutableStateOf("User") }
+
+    LaunchedEffect(Unit) {
+        authViewModel.getUserName { name ->
+            username = name ?: "User"
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -50,7 +67,7 @@ fun UserHeader(
                 modifier = Modifier.clickable { onProfileClick() }
             ) {
                 Text(
-                    text = "Hi, $userName!",
+                    text = "Hi, $username!",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextOnWhite

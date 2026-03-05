@@ -31,12 +31,7 @@ fun AdminAlertPage(
     modifier: Modifier,
     navController: NavController,
 
-    adminName: String = "Admin",
-    onHomeNav: () -> Unit = {},
-    onAlertNav: () -> Unit = {},
-    onIncomingNav: () -> Unit = {},
-    onSafetyNav: () -> Unit = {},
-    onProfileNav: () -> Unit = {}
+    adminName: String = "Admin"
 ) {
     val cardBg = Color(0xFFE6E6E6)
     val cardBorder = Color(0xFF6F7A8E)
@@ -80,7 +75,7 @@ fun AdminAlertPage(
                 .padding(bottom = 90.dp)
                 .verticalScroll(pageScroll)
         ) {
-            AdminHeader(adminName = adminName)
+            AdminHeader()
 
             Text(
                 text = "ALERTS",

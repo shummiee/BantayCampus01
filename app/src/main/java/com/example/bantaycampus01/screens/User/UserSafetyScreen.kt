@@ -141,10 +141,7 @@ fun UserSafetyPageUI(
         ) {
 
             // Header (User)
-            UserHeader(
-                userName = userName,
-                onProfileClick = { /* handled by navbar */ }
-            )
+            UserHeader()
 
             // Top status strip
             Row(

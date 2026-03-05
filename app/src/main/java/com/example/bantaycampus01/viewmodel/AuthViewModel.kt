@@ -45,6 +45,15 @@ class AuthViewModel : ViewModel() {
             }
     }
 
+    fun logout(onResult: (Boolean, String?) -> Unit) {
+        try {
+            auth.signOut()
+            onResult(true, null)
+        } catch (e: Exception) {
+            onResult(false, e.localizedMessage)
+        }
+    }
+
     fun register(
         email : String,
         name : String,
@@ -76,5 +85,26 @@ class AuthViewModel : ViewModel() {
                     onResult(false,it.exception?.localizedMessage)
                 }
             }
+    }
+
+    fun getUserName(onResult: (String?) -> Unit) {
+        val uid = auth.currentUser?.uid
+
+        if (uid != null) {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    val fullName = document.getString("name")
+                    val firstName = fullName?.split(" ")?.firstOrNull()  // take first word
+                    onResult(firstName)
+                }
+                .addOnFailureListener {
+                    onResult(null)
+                }
+        } else {
+            onResult(null)
+        }
     }
 }

@@ -23,16 +23,12 @@ import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.model.*
 
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminAlertHistory(
     modifier: Modifier,
     navController: NavController,
 
-    adminName: String = "Admin",
     onViewDetails1: () -> Unit = {},
     onViewDetails2: () -> Unit = {}
 ) {
@@ -61,7 +57,7 @@ fun AdminAlertHistory(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
         ) {
-            AdminHeader(adminName = adminName)
+            AdminHeader()
 
             Row(
                 modifier = Modifier
@@ -135,7 +131,6 @@ fun AdminAlertHistory(
                     details = "\"Lights are out in several classrooms...\"",
                     cardBg = cardBg,
                     border = border,
-                    onViewDetails = onViewDetails1,
                     navController = navController
                 )
 
@@ -149,7 +144,6 @@ fun AdminAlertHistory(
                     details = "\"Student fainted and needs medical assistance...\"",
                     cardBg = cardBg,
                     border = border,
-                    onViewDetails = onViewDetails2,
                     navController = navController
                 )
             }
@@ -289,7 +283,6 @@ private fun AlertHistoryCard(
     details: String,
     cardBg: Color,
     border: Color,
-    onViewDetails: () -> Unit
 ) {
     Column(
         modifier = Modifier

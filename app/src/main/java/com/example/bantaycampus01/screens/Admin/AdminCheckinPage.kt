@@ -68,7 +68,7 @@ fun AdminCheckInPage(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
         ) {
-            AdminHeader(adminName = adminName)
+            AdminHeader()
 
             Row(
                 modifier = Modifier

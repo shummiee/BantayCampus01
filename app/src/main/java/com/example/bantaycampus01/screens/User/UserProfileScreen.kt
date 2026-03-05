@@ -1,5 +1,6 @@
 package com.example.bantaycampus01.screens.User
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -35,19 +37,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
 fun UserProfileScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     // Data placeholders (keep as-is for now)
     val userName = "Sharmayne Cena"
     val userRole = "Student"
+
+    var context = LocalContext.current
+
+    BackHandler(enabled = true){
+        AppUtil.showToast(context, "You cannot go back to previous page")
+    }
 
     Box(
         modifier = Modifier
@@ -57,7 +69,7 @@ fun UserProfileScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp) // keep navbar visible
+                .padding(bottom = 80.dp)
                 .padding(horizontal = 18.dp)
                 .padding(top = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -70,7 +82,6 @@ fun UserProfileScreen(
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
-                // If you want the exact icon look, replace this Image with Icon(Icons.Filled.AccountCircle)
                 Image(
                     painter = painterResource(R.drawable.avatar),
                     contentDescription = "Avatar",
@@ -126,10 +137,15 @@ fun UserProfileScreen(
             // Logout pill (centered)
             Surface(
                 onClick = {
-                    // TODO: logout logic
-                    // Firebase.auth.signOut()
-                    // navController.navigate("Login_Screen") { popUpTo(0) }
-                },
+                    authViewModel.logout { success, error ->
+                        if (success) {
+                            navController.navigate("Login_Screen"){
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true  }
+                        } else {
+                            AppUtil.showToast(context, error?: "Logout Failed")
+                        }
+                    }},
                 shape = RoundedCornerShape(50),
                 color = UserUI.DarkBlue,
                 tonalElevation = 0.dp,

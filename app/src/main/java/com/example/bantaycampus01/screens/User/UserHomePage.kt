@@ -115,10 +115,7 @@ fun UserHomePage(
                 .verticalScroll(screenScroll)
         ) {
 
-            UserHeader(
-                userName = userName,
-                onProfileClick = onProfileClick
-            )
+            UserHeader()
 
             Row(
                 modifier = Modifier

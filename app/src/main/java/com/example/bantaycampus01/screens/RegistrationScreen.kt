@@ -28,7 +28,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -53,14 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bantaycampus01.AppUtil
-import com.example.bantaycampus01.ui.theme.DarkGrayBlue
-import com.example.bantaycampus01.ui.theme.SubTextLabel
-import com.example.bantaycampus01.ui.theme.TextBoxBg
-import com.example.bantaycampus01.ui.theme.TextBoxPlaceholder
-import com.example.bantaycampus01.ui.theme.TextBoxText
-import com.example.bantaycampus01.ui.theme.TextOnDark
-import com.example.bantaycampus01.ui.theme.TextOnWhite
-import com.example.bantaycampus01.ui.theme.White
+import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 import java.util.Calendar
 

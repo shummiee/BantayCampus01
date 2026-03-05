@@ -1,100 +1,195 @@
 package com.example.bantaycampus01.screens.User.Menu
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.bantaycampus01.partials.user.*
+import androidx.navigation.NavController
+import com.example.bantaycampus01.R
+import com.example.bantaycampus01.partials.user.UserBottomNavBar
+import com.example.bantaycampus01.partials.user.UserTopBar
+import com.example.bantaycampus01.partials.user.UserUI
 
 @Composable
 fun AboutUsScreen(
-    onReturn: () -> Unit,
-    onHome: () -> Unit,
-    onShield: () -> Unit,
-    onSos: () -> Unit,
-    onAlert: () -> Unit,
-    onProfile: () -> Unit
+    modifier: Modifier = Modifier,
+    navController: NavController
 ) {
+    // colors to match screenshot
+    val cardBg = Color(0xFFE6E6E6)        // light gray
+    val cardBorder = Color(0xFF6F7A8E)    // gray-blue border
+    val textColor = Color(0xFF22304A)
+
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
             UserTopBar(
                 title = "",
                 showReturn = true,
-                onReturn = onReturn
+                onReturn = { navController.popBackStack() }
             )
         },
         bottomBar = {
             UserBottomNavBar(
-                onHome = onHome,
-                onShield = onShield,
-                onSos = onSos,
-                onAlert = onAlert,
-                onProfile = onProfile
+                onHome = { navController.navigate("UserHomePage_Screen") },
+                onShield = { navController.navigate("UserSafety_Screen") },
+                onSos = { /* TODO: navController.navigate("UserSos_Screen") */ },
+                onAlert = { navController.navigate("UserAlert_Screen") },
+                onProfile = { navController.navigate("UserProfile_Screen") }
             )
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(18.dp)
-                .padding(bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(horizontal = 18.dp)
+                .padding(top = 12.dp, bottom = 110.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("ABOUT US", fontSize = 22.sp, fontWeight = FontWeight.Black, color = UserUI.DarkBlue)
+            Text(
+                text = "ABOUT US",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Black,
+                color = UserUI.DarkBlue
+            )
 
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+            Spacer(Modifier.height(12.dp))
+
+            // ✅ Gray bordered info card like screenshot
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(cardBg)
+                    .border(1.dp, cardBorder, RoundedCornerShape(18.dp))
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
                 Text(
-                    text = "BantayCampus is a mobile-based real-time safety monitoring system designed to enhance the security and well-being of students and staff within the campus.\n\nIt provides a fast and reliable way to report emergencies, receive safety updates, and stay informed about current campus conditions.\n\nYour campus. Your safety. Our priority.",
-                    modifier = Modifier.padding(14.dp),
-                    color = UserUI.DarkBlue,
-                    fontSize = 12.sp,
-                    lineHeight = 16.sp,
-                    textAlign = TextAlign.Center
+                    text = "BantayCampus is a mobile-based\nreal-time safety monitoring system\ndesigned to enhance the security and\nwell-being of students and staff\nwithin the campus. The application\nprovides a fast and reliable way to\nreport emergencies, receive safety\nupdates, and stay informed about\ncurrent campus conditions.",
+                    color = textColor,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = "Your campus. Your safety. Our priority.",
+                    color = textColor,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Text("DEVELOPERS", fontSize = 18.sp, fontWeight = FontWeight.Black, color = UserUI.DarkBlue)
+            Spacer(Modifier.height(18.dp))
 
-            DeveloperCard(name = "Sharmayne Cena", role = "BS Computer Engineering\nFront End & Back End Developer")
-            DeveloperCard(name = "Christina Sevilla", role = "BS Computer Engineering\nFront End & Back End Developer")
+            Text(
+                text = "DEVELOPERS",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Black,
+                color = UserUI.DarkBlue
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            DeveloperRowCard(
+                name = "Sharmayne Cena",
+                course = "BS Computer Engineering",
+                role = "Front End and Back End Developer",
+                avatarRes = R.drawable.avatar, // replace if you have a better dev image
+                cardBg = cardBg,
+                cardBorder = cardBorder,
+                textColor = textColor
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            DeveloperRowCard(
+                name = "Christina Sevilla",
+                course = "BS Computer Engineering",
+                role = "Front End and Back End Developer",
+                avatarRes = R.drawable.avatar, // replace if you have a better dev image
+                cardBg = cardBg,
+                cardBorder = cardBorder,
+                textColor = textColor
+            )
         }
     }
 }
 
 @Composable
-private fun DeveloperCard(name: String, role: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+private fun DeveloperRowCard(
+    name: String,
+    course: String,
+    role: String,
+    avatarRes: Int,
+    cardBg: Color,
+    cardBorder: Color,
+    textColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(18.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(Color.White),
+            contentAlignment = Alignment.Center
         ) {
-            Text(name, fontWeight = FontWeight.Black, color = UserUI.DarkBlue)
-            Spacer(Modifier.height(4.dp))
-            Text(role, color = UserUI.DarkBlue.copy(alpha = 0.75f), fontSize = 12.sp, textAlign = TextAlign.Center)
+            Image(
+                painter = painterResource(avatarRes),
+                contentDescription = null,
+                modifier = Modifier.size(46.dp)
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = name,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black,
+                color = textColor
+            )
+
+            Text(
+                text = course,
+                fontSize = 12.sp,
+                color = textColor.copy(alpha = 0.9f)
+            )
+
+            Text(
+                text = role,
+                fontSize = 11.sp,
+                color = textColor.copy(alpha = 0.85f)
+            )
         }
     }
 }

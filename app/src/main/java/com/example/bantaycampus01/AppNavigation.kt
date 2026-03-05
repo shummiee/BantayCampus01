@@ -13,6 +13,9 @@ import com.example.bantaycampus01.screens.Admin.AdminHomePage
 import com.example.bantaycampus01.screens.Admin.AdminSafetyPage
 import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
+import com.example.bantaycampus01.screens.User.Menu.AboutUsScreen
+import com.example.bantaycampus01.screens.User.Menu.AccountInfoScreen
+import com.example.bantaycampus01.screens.User.Menu.NotificationSettingsScreen
 import com.example.bantaycampus01.screens.User.Menu.ReportStatusScreen
 import com.example.bantaycampus01.screens.User.UserAlertDetailsScreen
 import com.example.bantaycampus01.screens.User.UserAlertScreen
@@ -21,6 +24,7 @@ import com.example.bantaycampus01.screens.User.UserProfileScreen
 import com.example.bantaycampus01.screens.User.UserSafetyScreen
 import com.example.bantaycampus01.screens.User.Menu.ReportHistoryScreen
 import com.example.bantaycampus01.screens.User.Menu.NotificationsScreen
+import com.example.bantaycampus01.screens.User.Menu.SchoolContactsScreen
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -83,6 +87,18 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("UserNotification_Screen"){
             NotificationsScreen(modifier, navController)
+        }
+        composable("AccountInfo_Screen"){
+            AccountInfoScreen(modifier, navController)
+        }
+        composable("SchoolContact_Screen"){
+            SchoolContactsScreen(modifier, navController)
+        }
+        composable("NotificationSetting_Screen"){
+            NotificationSettingsScreen(modifier, navController)
+        }
+        composable("AboutUs_Screen"){
+            AboutUsScreen(modifier, navController)
         }
     }
 }

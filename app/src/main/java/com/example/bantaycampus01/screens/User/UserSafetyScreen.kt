@@ -3,19 +3,7 @@ package com.example.bantaycampus01.screens.User
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +13,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +30,7 @@ import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
 
 @Composable
 fun UserSafetyScreen(
@@ -64,10 +57,10 @@ fun UserSafetyScreen(
     campusUpdateTime: String = "10:45 AM",
 
     // Actions / navigation hooks
-    onClockClick: () -> Unit = {},          // e.g., go to check-in history
-    onViewAdvisoryClick: () -> Unit = {},   // optional if you want a dedicated advisory page
-    onViewContactsClick: () -> Unit = {},   // optional
-    onViewMapsClick: () -> Unit = {}        // optional
+    onClockClick: () -> Unit = {},
+    onViewAdvisoryClick: () -> Unit = {},
+    onViewContactsClick: () -> Unit = {},
+    onViewMapsClick: () -> Unit = {}
 ) {
     UserSafetyPageUI(
         modifier = modifier,
@@ -121,7 +114,6 @@ fun UserSafetyPageUI(
 ) {
     val advisoryBorder = UserUI.DangerRed
     val cardBg = UserUI.CardBg
-    val header = UserUI.DarkBlue
 
     val statusDot = when (campusUpdateStatus.uppercase()) {
         "SAFE" -> UserUI.Green
@@ -132,6 +124,9 @@ fun UserSafetyPageUI(
     }
 
     val screenScroll = rememberScrollState()
+
+    // ✅ blueprint style: use rememberSaveable like your UserHomePage
+    var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -144,13 +139,14 @@ fun UserSafetyPageUI(
                 .padding(bottom = 80.dp)
                 .verticalScroll(screenScroll)
         ) {
+
             // Header (User)
             UserHeader(
                 userName = userName,
-                onProfileClick = { /* already handled by nav bar */ }
+                onProfileClick = { /* handled by navbar */ }
             )
 
-            // Top status strip (blueprint)
+            // Top status strip
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -173,16 +169,20 @@ fun UserSafetyPageUI(
                     )
                 }
 
-                Surface(
-                    color = Color.White.copy(alpha = 0.22f),
+                // ✅ CHANGED: MARK SAFE pill button (matches UserHomePage blueprint)
+                Button(
+                    onClick = {
+                        onClockClick()
+                        showMarkedSafeDialog = true
+                    },
                     shape = RoundedCornerShape(50),
-                    modifier = Modifier
-                        .size(46.dp)
-                        .clickable { onClockClick() }
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White.copy(alpha = 0.22f)
+                    ),
+                    modifier = Modifier.size(46.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("🕒", fontSize = 24.sp)
-                    }
+                    Text("✅", fontSize = 24.sp)
                 }
             }
 
@@ -231,25 +231,6 @@ fun UserSafetyPageUI(
                     color = UserUI.DarkBlue,
                     lineHeight = 14.sp
                 )
-
-                Spacer(Modifier.height(10.dp))
-
-                Button(
-                    onClick = onViewAdvisoryClick,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .height(34.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = header),
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(horizontal = 18.dp)
-                ) {
-                    Text(
-                        text = "VIEW",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White
-                    )
-                }
             }
 
             Spacer(Modifier.height(14.dp))
@@ -315,7 +296,7 @@ fun UserSafetyPageUI(
 
             Spacer(Modifier.height(14.dp))
 
-            // Info panels row (same as Admin)
+            // Info panels row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -323,33 +304,76 @@ fun UserSafetyPageUI(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 InfoPanel(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onViewContactsClick() },
+                    modifier = Modifier.weight(1f),
                     panelBg = UserUI.DarkBlue,
                     title = "EMERGENCY CONTACTS",
                     titleTextColor = Color.White
                 ) {
-                    MiniWhiteCard(title = "ADMIN", body = "+63 912 3456 789")
+
+                    MiniWhiteCard(
+                        title = "ADMIN",
+                        body = "+63 912 3456 789",
+                        onClick = {
+                            // TODO: open admin contact
+                        }
+                    )
+
                     Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "GUARD", body = "+63 912 3456 789")
+
+                    MiniWhiteCard(
+                        title = "GUARD",
+                        body = "+63 912 3456 789",
+                        onClick = {
+                            // TODO: open guard contact
+                        }
+                    )
+
                     Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "CLINIC", body = "+63 912 3456 789")
+
+                    MiniWhiteCard(
+                        title = "CLINIC",
+                        body = "+63 912 3456 789",
+                        onClick = {
+                            // TODO: open clinic contact
+                        }
+                    )
                 }
 
+
                 InfoPanel(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable { onViewMapsClick() },
+                    modifier = Modifier.weight(1f),
                     panelBg = UserUI.PaleBlueCard,
                     title = "FIRE EXIT MAPS",
                     titleTextColor = UserUI.DarkBlue
                 ) {
-                    MiniWhiteCard(title = "ACADEMIC BUILDING", body = "2ND FLOOR")
+
+                    MiniWhiteCard(
+                        title = "ACADEMIC BUILDING",
+                        body = "2ND FLOOR",
+                        onClick = {
+                            // TODO: open 2nd floor map
+                        }
+                    )
+
                     Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "ACADEMIC BUILDING", body = "3RD FLOOR")
+
+                    MiniWhiteCard(
+                        title = "ACADEMIC BUILDING",
+                        body = "3RD FLOOR",
+                        onClick = {
+                            // TODO: open 3rd floor map
+                        }
+                    )
+
                     Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "ACADEMIC BUILDING", body = "4TH FLOOR")
+
+                    MiniWhiteCard(
+                        title = "ACADEMIC BUILDING",
+                        body = "4TH FLOOR",
+                        onClick = {
+                            // TODO: open 4th floor map
+                        }
+                    )
                 }
             }
 
@@ -363,6 +387,13 @@ fun UserSafetyPageUI(
                 navController = navController
             )
         }
+
+        // ✅ Mark Safe success dialog
+        MarkSafeDialog(
+            show = showMarkedSafeDialog,
+            onConfirm = { showMarkedSafeDialog = false },
+            onDismiss = { showMarkedSafeDialog = false }
+        )
     }
 }
 
@@ -404,26 +435,34 @@ private fun InfoPanel(
 @Composable
 private fun MiniWhiteCard(
     title: String,
-    body: String
+    body: String,
+    onClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .border(1.dp, UserUI.DarkBlue.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+            .border(
+                1.dp,
+                UserUI.DarkBlue.copy(alpha = 0.25f),
+                RoundedCornerShape(12.dp)
+            )
+            .clickable { onClick() }
             .padding(vertical = 10.dp, horizontal = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Text(
             text = title,
             fontSize = 14.sp,
             fontWeight = FontWeight.Black,
-            lineHeight = 14.sp,
             color = UserUI.DarkBlue,
             textAlign = TextAlign.Center
         )
+
         Spacer(Modifier.height(2.dp))
+
         Text(
             text = body,
             fontSize = 12.sp,

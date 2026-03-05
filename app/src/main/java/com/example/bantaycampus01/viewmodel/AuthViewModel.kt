@@ -31,6 +31,7 @@ class AuthViewModel : ViewModel() {
         idNumber : String,
         department : String,
         dob : String,
+        role : String,
 
         password: String,
         onResult: (Boolean, String?)-> Unit){
@@ -39,7 +40,7 @@ class AuthViewModel : ViewModel() {
                 if(it.isSuccessful) {
                     var userId = it.result?.user?.uid
 
-                    val userModel = UserModel(name, email, contactNumber, idNumber, department, dob, userId!!)
+                    val userModel = UserModel(name, email, contactNumber, idNumber, department, dob, role!!, userId!!)
                     firestore.collection("users").document(userId)
                         .set(userModel)
                         .addOnCompleteListener { dbTask->

@@ -87,10 +87,7 @@ fun NotificationsScreen(
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
-            UserHeader(
-                userName = userName,
-                onProfileClick = { navController.navigate("UserProfile_Screen") }
-            )
+            UserHeader()
         },
         bottomBar = {
             UserNavBar(modifier = Modifier, navController = navController)

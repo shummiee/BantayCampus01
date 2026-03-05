@@ -33,7 +33,7 @@ fun AppNavigation(modifier: Modifier = Modifier){
     val navController = rememberNavController()
 
     val isLoggedIn = Firebase.auth.currentUser!=null
-    val firstPage = if(isLoggedIn) "MainMenu_Screen" else "Login_Screen" //Login State (Remember Logged-In user after clicking home screen button on phone.)
+    val firstPage = if(isLoggedIn) "MainMenu_Screen" else "Login_Screen"
 
     NavHost(navController = navController, startDestination = "Login_Screen"){
 
@@ -43,7 +43,7 @@ fun AppNavigation(modifier: Modifier = Modifier){
         composable("Registration_Screen"){
             RegistrationScreen(modifier, navController)
         }
-        //************************************ADMIN*******************************
+        //*******************************ADMIN*******************************
         composable("AdminHomePage_Screen") {
             AdminHomePage(modifier,navController)
         }
@@ -62,7 +62,7 @@ fun AppNavigation(modifier: Modifier = Modifier){
         composable("AdminAlertHistory_Screen"){
             AdminAlertHistory(modifier, navController)
         }
-        //***************************************USER******************************
+        //********************************USER******************************
         composable("UserHomePage_Screen"){
             UserHomePage(modifier, navController)
         }

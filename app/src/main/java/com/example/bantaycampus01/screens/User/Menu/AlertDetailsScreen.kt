@@ -80,10 +80,7 @@ fun UserAlertDetailsScreen(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
         ) {
-            UserHeader(
-                userName = userName,
-                onProfileClick = { /* handled by navbar */ }
-            )
+            UserHeader()
 
             TextButton(
                 onClick = onReturn,

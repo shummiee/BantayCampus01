@@ -69,8 +69,6 @@ fun AdminHomePage(
     safetyStatus: String = "RESOLVED",
     advisoryText: String = "Due to heavy rain, some walkways may be slippery. Please take extra caution when moving around campus.",
 
-    onIncomingAlertsClick: () -> Unit = {},
-    onManageCasesClick: () -> Unit = {},
     onRiskControlClick: () -> Unit = {}
 ) {
     val header = DarkGrayBlue
@@ -125,7 +123,7 @@ fun AdminHomePage(
                 .padding(bottom = 80.dp) // keeps navbar visible
                 .verticalScroll(screenScroll)
         ) {
-            AdminHeader(adminName = adminName)
+            AdminHeader()
 
             Column(modifier = Modifier.padding(horizontal = 30.dp, vertical = 10.dp)) {
                 Text(

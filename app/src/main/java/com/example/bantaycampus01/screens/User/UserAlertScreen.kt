@@ -118,10 +118,7 @@ fun UserAlertScreen(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
         ) {
-            UserHeader(
-                userName = userName,
-                onProfileClick = { /* handled by navbar */ }
-            )
+            UserHeader()
 
             // Top pills row (CATEGORY + FILTER) — like screenshot
             Row(

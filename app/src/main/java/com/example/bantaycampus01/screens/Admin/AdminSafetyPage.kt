@@ -188,7 +188,7 @@ fun AdminSafetyPageUI(
                 .padding(bottom = 80.dp)
                 .verticalScroll(screenScroll)
         ) {
-            AdminHeader(adminName = adminName)
+            AdminHeader()
 
             Row(
                 modifier = Modifier

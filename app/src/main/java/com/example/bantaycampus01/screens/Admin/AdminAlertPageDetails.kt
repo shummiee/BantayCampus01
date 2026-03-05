@@ -68,7 +68,7 @@ fun AdminAlertPageDetails(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
         ) {
-            AdminHeader(adminName = adminName)
+            AdminHeader()
 
             TextButton(
                 onClick = onReturn,

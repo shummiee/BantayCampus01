@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.bantaycampus01.partials.user.UserBottomNavBar
+import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserTopBar
 import com.example.bantaycampus01.partials.user.UserUI
 
@@ -37,6 +37,7 @@ fun NotificationSettingsScreen(
     var riskLevelUpdates by remember { mutableStateOf(true) }
     var soundVibration by remember { mutableStateOf(true) }
 
+    // ✅ Do NOT use bottomBar here; pin UserNavBar like UserProfileScreen
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
@@ -45,75 +46,82 @@ fun NotificationSettingsScreen(
                 showReturn = true,
                 onReturn = { navController.popBackStack() }
             )
-        },
-        bottomBar = {
-            UserBottomNavBar(
-                onHome = { navController.navigate("UserHomePage_Screen") },
-                onShield = { navController.navigate("UserSafety_Screen") },
-                onSos = { /* TODO: navController.navigate("UserSos_Screen") */ },
-                onAlert = { navController.navigate("UserAlert_Screen") },
-                onProfile = { navController.navigate("UserProfile_Screen") }
-            )
         }
     ) { padding ->
-        Column(
-            modifier = modifier
-                .padding(padding)
+        Box(
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp)
-                .padding(top = 12.dp, bottom = 110.dp)
+                .background(UserUI.Bg)
         ) {
-            Text(
-                text = "Notification Preference",
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                color = UserUI.DarkBlue,
-                modifier = Modifier.padding(start = 2.dp)
-            )
-
-            Spacer(Modifier.height(10.dp))
-
-            // ✅ Bordered table like screenshot
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(tableBg, RoundedCornerShape(2.dp))
-                    .border(1.dp, tableBorder, RoundedCornerShape(2.dp))
+                modifier = modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp) // ✅ space for UserNavBar
+                    .padding(horizontal = 18.dp)
+                    .padding(top = 12.dp)
             ) {
-                PreferenceRow(
-                    title = "Emergency Alerts",
-                    desc = "Receive notifications when there is an active incident on campus.",
-                    checked = emergencyAlerts,
-                    onCheckedChange = { emergencyAlerts = it },
-                    dividerColor = tableBorder,
-                    textColor = textColor
+                Text(
+                    text = "Notification Preference",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = UserUI.DarkBlue,
+                    modifier = Modifier.padding(start = 2.dp)
                 )
 
-                PreferenceRow(
-                    title = "Status Updates",
-                    desc = "Notify when your report changes status.",
-                    checked = statusUpdates,
-                    onCheckedChange = { statusUpdates = it },
-                    dividerColor = tableBorder,
-                    textColor = textColor
-                )
+                Spacer(Modifier.height(10.dp))
 
-                PreferenceRow(
-                    title = "Campus Risk Level Updates",
-                    desc = "Notify when campus status changes.",
-                    checked = riskLevelUpdates,
-                    onCheckedChange = { riskLevelUpdates = it },
-                    dividerColor = tableBorder,
-                    textColor = textColor
-                )
+                // ✅ Bordered table like screenshot
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(tableBg, RoundedCornerShape(2.dp))
+                        .border(1.dp, tableBorder, RoundedCornerShape(2.dp))
+                ) {
+                    PreferenceRow(
+                        title = "Emergency Alerts",
+                        desc = "Receive notifications when there is an active incident on campus.",
+                        checked = emergencyAlerts,
+                        onCheckedChange = { emergencyAlerts = it },
+                        dividerColor = tableBorder,
+                        textColor = textColor
+                    )
 
-                PreferenceRow(
-                    title = "Sound & Vibration",
-                    desc = "Enable alert sound and vibration for emergencies.",
-                    checked = soundVibration,
-                    onCheckedChange = { soundVibration = it },
-                    dividerColor = tableBorder,
-                    textColor = textColor
+                    PreferenceRow(
+                        title = "Status Updates",
+                        desc = "Notify when your report changes status.",
+                        checked = statusUpdates,
+                        onCheckedChange = { statusUpdates = it },
+                        dividerColor = tableBorder,
+                        textColor = textColor
+                    )
+
+                    PreferenceRow(
+                        title = "Campus Risk Level Updates",
+                        desc = "Notify when campus status changes.",
+                        checked = riskLevelUpdates,
+                        onCheckedChange = { riskLevelUpdates = it },
+                        dividerColor = tableBorder,
+                        textColor = textColor
+                    )
+
+                    PreferenceRow(
+                        title = "Sound & Vibration",
+                        desc = "Enable alert sound and vibration for emergencies.",
+                        checked = soundVibration,
+                        onCheckedChange = { soundVibration = it },
+                        dividerColor = tableBorder,
+                        textColor = textColor,
+                        isLast = true
+                    )
+                }
+            }
+
+            // ✅ Bottom pinned navbar (UserNavBar.kt)
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                UserNavBar(
+                    modifier = Modifier,
+                    navController = navController
                 )
             }
         }

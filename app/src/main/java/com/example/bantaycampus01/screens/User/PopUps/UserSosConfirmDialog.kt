@@ -1,5 +1,6 @@
 package com.example.bantaycampus01.screens.User.PopUps
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,32 +8,58 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.partials.user.UserUI
+import com.example.bantaycampus01.viewmodel.AuthViewModel
+import com.example.bantaycampus01.viewmodel.SosViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun UserSosConfirmDialog(
     show: Boolean,
-    onSendSos: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    authViewModel: AuthViewModel = viewModel(),
+    sosViewModel: SosViewModel = viewModel()
 ) {
     if (!show) return
 
     val dialogScroll = rememberScrollState()
+    val context = LocalContext.current
+    var showSosSentDialog by remember { mutableStateOf(false) }
+
+    // Local state for the current user
+    var currentUserName by remember { mutableStateOf<String?>(null) }
+    var currentUserId by remember { mutableStateOf<String?>(null) }
+
+    // Fetch user profile once when dialog opens
+    LaunchedEffect(Unit) {
+        authViewModel.getUserProfile { name, email, contact, idNumber, department, role ->
+            currentUserName = name
+            currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        }
+    }
+
+    // Show the SOS Sent dialog if SOS was successfully sent
+    if (showSosSentDialog) {
+        UserSosSentDialog(
+            show = true,
+            onDismiss = {
+                onDismiss()
+            }
+        )
+        return
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -50,6 +77,7 @@ fun UserSosConfirmDialog(
                     .verticalScroll(dialogScroll)
                     .padding(14.dp)
             ) {
+                // --- Header ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Top
@@ -77,6 +105,7 @@ fun UserSosConfirmDialog(
 
                 Spacer(Modifier.height(10.dp))
 
+                // --- Body ---
                 Text(
                     text = "Send Emergency SOS",
                     fontSize = 12.sp,
@@ -110,12 +139,33 @@ fun UserSosConfirmDialog(
 
                 Spacer(Modifier.height(14.dp))
 
+                // --- Buttons ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    // SEND SOS Button
                     Button(
-                        onClick = onSendSos,
+                        onClick = {
+                            val userId = currentUserId
+                            val userName = currentUserName
+                            if (userId != null && userName != null) {
+                                sosViewModel.sendSOS(
+                                    userId = userId,
+                                    userName = userName,
+                                    onSuccess = { showSosSentDialog = true },
+                                    onFailure = {
+                                        Toast.makeText(
+                                            context,
+                                            "SOS Failed: ${it.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                )
+                            } else {
+                                Toast.makeText(context, "User info not loaded", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = UserUI.DangerRed),
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
@@ -130,6 +180,7 @@ fun UserSosConfirmDialog(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
+                    // CANCEL Button
                     Button(
                         onClick = onDismiss,
                         colors = ButtonDefaults.buttonColors(containerColor = UserUI.DarkBlue),

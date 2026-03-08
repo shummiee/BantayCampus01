@@ -18,6 +18,7 @@ import com.example.bantaycampus01.R
 import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.screens.User.PopUps.UserSosConfirmDialog
 import com.example.bantaycampus01.screens.User.PopUps.UserSosSentDialog
+import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
 fun UserNavBar(
@@ -97,10 +98,6 @@ fun UserNavBar(
         // CONFIRM SOS DIALOG
         UserSosConfirmDialog(
             show = showConfirm,
-            onSendSos = {
-                showConfirm = false
-                showSent = true
-            },
             onDismiss = {
                 showConfirm = false
             }

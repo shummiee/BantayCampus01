@@ -56,7 +56,6 @@ fun UserHomePage(
     modifier: Modifier,
     navController: NavController,
 
-    userName: String = "User",
     campusStatusText: String = "SAFE",
     lastUpdatedText: String = "Last Updated 10:45 am by Admin",
     safetyTitle: String = "SAFETY UPDATE",
@@ -65,10 +64,8 @@ fun UserHomePage(
     safetyStatus: String = "RESOLVED",
     advisoryText: String = "Due to heavy rain, some walkways may be slippery. Please take extra caution when moving around campus.",
 
-    onProfileClick: () -> Unit = {},
     onSendReportClick: () -> Unit = {},
     onReportStatusClick: () -> Unit = {},
-    onMarkSafeClick: () -> Unit = {}
 ) {
 
     val screenScroll = rememberScrollState()

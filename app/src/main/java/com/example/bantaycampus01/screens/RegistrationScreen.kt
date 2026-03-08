@@ -288,8 +288,6 @@ fun RegistrationScreen(
                 onClick = {
                     isLoading = true
 
-                    // NOTE: your current register() only accepts (email, name, password)
-                    // When you update backend, include contactNumber/idNumber/department/dob.
                     authViewModel.register(email, name, contactNumber, idNumber, department, dob, role, password) { success, errorMessage ->
                         if (success) {
                             isLoading = false

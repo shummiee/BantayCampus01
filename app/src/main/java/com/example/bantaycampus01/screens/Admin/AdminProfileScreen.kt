@@ -141,7 +141,7 @@ fun AdminProfileScreen(
 
             ProfilePillRow(
                 icon = { Icon(Icons.Filled.Call, contentDescription = null, tint = Color.White) },
-                text = "EMERGENY CONTACTS", // (kept as screenshot spelling)
+                text = "EMERGENCY CONTACTS", // (kept as screenshot spelling)
                 onClick = { navController.navigate("SchoolContact_Screen") }
             )
 

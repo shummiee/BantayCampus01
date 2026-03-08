@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Call
@@ -56,6 +58,7 @@ fun UserProfileScreen(
     navController: NavController,
 ) {
     var context = LocalContext.current
+    val screenScroll = rememberScrollState()
 
     val authViewModel = viewModel<AuthViewModel>()
 
@@ -91,7 +94,8 @@ fun UserProfileScreen(
                 .fillMaxSize()
                 .padding(bottom = 80.dp)
                 .padding(horizontal = 18.dp)
-                .padding(top = 16.dp),
+                .padding(top = 16.dp)
+                .verticalScroll(screenScroll),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar (top-center)
@@ -152,7 +156,7 @@ fun UserProfileScreen(
             )
 
             // Big spacing before logout (like screenshot)
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(180.dp))
 
             // Logout pill (centered)
             Surface(
@@ -194,8 +198,6 @@ fun UserProfileScreen(
                 fontStyle = FontStyle.Italic,
                 textDecoration = TextDecoration.Underline
             )
-
-            Spacer(modifier = Modifier.height(10.dp))
         }
 
         // Navbar

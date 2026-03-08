@@ -67,7 +67,9 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
     val context = LocalContext.current
 
 
-    Box(modifier = Modifier.fillMaxSize().background(White)) {
+    Box(modifier = Modifier
+                    .fillMaxSize()
+                    .background(White)) {
 
         Box(
             modifier = Modifier

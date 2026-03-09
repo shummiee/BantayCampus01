@@ -63,19 +63,11 @@ fun UserProfileScreen(
     val authViewModel = viewModel<AuthViewModel>()
 
     var username by remember { mutableStateOf("User") }
-    var useremail by remember { mutableStateOf("User") }
-    var usercontactnumber by remember { mutableStateOf("User") }
-    var useridnumber by remember { mutableStateOf("User") }
-    var userdepartment by remember { mutableStateOf("User") }
     var userrole by remember { mutableStateOf("User") }
 
     LaunchedEffect(Unit) {
         authViewModel.getUserProfile { name, email, contactNumber, idNumber, department, role  ->
             username = name ?: "User"
-            useremail = email ?: "User"
-            usercontactnumber = contactNumber ?: "User"
-            useridnumber = idNumber ?: "User"
-            userdepartment = department ?: "User"
             userrole = role ?: "User"
         }
     }
@@ -145,7 +137,7 @@ fun UserProfileScreen(
 
             ProfilePillRow(
                 icon = { Icon(Icons.Filled.Call, contentDescription = null, tint = Color.White) },
-                text = "EMERGENY CONTACTS", // (kept as screenshot spelling)
+                text = "EMERGENCY CONTACTS", // (kept as screenshot spelling)
                 onClick = { navController.navigate("SchoolContact_Screen") }
             )
 

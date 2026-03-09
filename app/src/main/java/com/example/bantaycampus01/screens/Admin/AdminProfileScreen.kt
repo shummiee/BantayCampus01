@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -56,23 +57,16 @@ fun AdminProfileScreen(
     navController: NavController,
 ) {
     var context = LocalContext.current
+    val screenScroll = rememberScrollState()
 
     val authViewModel = viewModel<AuthViewModel>()
 
     var username by remember { mutableStateOf("User") }
-    var useremail by remember { mutableStateOf("User") }
-    var usercontactnumber by remember { mutableStateOf("User") }
-    var useridnumber by remember { mutableStateOf("User") }
-    var userdepartment by remember { mutableStateOf("User") }
     var userrole by remember { mutableStateOf("User") }
 
     LaunchedEffect(Unit) {
         authViewModel.getUserProfile { name, email, contactNumber, idNumber, department, role  ->
             username = name ?: "User"
-            useremail = email ?: "User"
-            usercontactnumber = contactNumber ?: "User"
-            useridnumber = idNumber ?: "User"
-            userdepartment = department ?: "User"
             userrole = role ?: "User"
         }
     }
@@ -152,7 +146,7 @@ fun AdminProfileScreen(
             )
 
             // Big spacing before logout (like screenshot)
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(180.dp))
 
             // Logout pill (centered)
             Surface(
@@ -194,8 +188,6 @@ fun AdminProfileScreen(
                 fontStyle = FontStyle.Italic,
                 textDecoration = TextDecoration.Underline
             )
-
-            Spacer(modifier = Modifier.height(10.dp))
         }
 
         // Navbar

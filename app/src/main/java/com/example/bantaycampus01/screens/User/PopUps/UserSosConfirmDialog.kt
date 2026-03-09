@@ -40,12 +40,14 @@ fun UserSosConfirmDialog(
 
     // Local state for the current user
     var currentUserName by remember { mutableStateOf<String?>(null) }
+    var currentUserIdNumber by remember { mutableStateOf<String?>(null) }
     var currentUserId by remember { mutableStateOf<String?>(null) }
 
     // Fetch user profile once when dialog opens
     LaunchedEffect(Unit) {
         authViewModel.getUserProfile { name, email, contact, idNumber, department, role ->
             currentUserName = name
+            currentUserIdNumber = idNumber
             currentUserId = FirebaseAuth.getInstance().currentUser?.uid
         }
     }
@@ -149,10 +151,12 @@ fun UserSosConfirmDialog(
                         onClick = {
                             val userId = currentUserId
                             val userName = currentUserName
-                            if (userId != null && userName != null) {
+                            val userIdNumber = currentUserIdNumber
+                            if (userId != null && userName != null && userIdNumber != null) {
                                 sosViewModel.sendSOS(
                                     userId = userId,
                                     userName = userName,
+                                    userIdNumber = userIdNumber,
                                     onSuccess = { showSosSentDialog = true },
                                     onFailure = {
                                         Toast.makeText(

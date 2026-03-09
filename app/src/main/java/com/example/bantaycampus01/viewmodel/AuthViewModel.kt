@@ -123,7 +123,7 @@ class AuthViewModel : ViewModel() {
                     val name = document.getString("name")
                     val email = document.getString("email")
                     val contactNumber = document.getString("contactNumber")
-                    val idNumber = document.getString("idNUmber")
+                    val idNumber = document.getString("idNumber")
                     val department = document.getString("department")
                     val role = document.getString("role")
 

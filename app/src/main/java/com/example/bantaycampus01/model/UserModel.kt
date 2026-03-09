@@ -9,5 +9,5 @@ data class UserModel(
     val dob: String = "",
     val role: String = "",
 
-    val uid: String
+    val accountId: String
 )

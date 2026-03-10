@@ -19,19 +19,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,69 +38,164 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.bantaycampus01.model.AlertCategory
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
-import com.example.bantaycampus01.model.*
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+data class FirestoreAlertItem(
+    val id: String,
+    val type: AlertCategory,
+    val title: String,
+    val timeRight: String,
+    val location: String,
+    val statusLabel: String,
+    val statusColor: Color,
+    val messagePreview: String,
+    val rawDescription: String,
+    val reportedBy: String,
+    val categoryText: String,
+    val dateTimeText: String,
+    val createdAt: Long,
+    val source: String,
+    val activityLogs: List<String> = emptyList()
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAlertScreen(
     modifier: Modifier,
     navController: NavController,
-    userName: String = "User",
-
-    // If you already have real alert data, pass it here.
-    items: List<UserAlertItem> = listOf(
-        UserAlertItem(
-            type = AlertCategory.POWER,
-            title = "Power Outage",
-            timeRight = "Jan 27, 2026 • 8:10 AM",
-            location = "Academic Building - 2nd Floor",
-            statusLabel = "Acknowledged",
-            statusColor = Color(0xFFF4B400), // yellow-ish
-            messagePreview = "\"Lights are out in several classrooms...\""
-        ),
-        UserAlertItem(
-            type = AlertCategory.MEDICAL,
-            title = "Medical Emergency",
-            timeRight = "Jan 27, 2026 • 8:10 AM",
-            location = "Canteen Area",
-            statusLabel = "Resolved",
-            statusColor = UserUI.Green,
-            messagePreview = "\"Student fainted and needs medical assistance...\""
-        )
-    ),
-
-    // Called when user taps View Details
-    onViewDetails: (UserAlertItem) -> Unit = {}
+    userName: String = "User"
 ) {
     val border = Color(0xFF6F7A8E)
     val cardBg = Color(0xFFCAD6EE)
+    val db = remember { FirebaseFirestore.getInstance() }
+
+    var reportItems by remember { mutableStateOf(listOf<FirestoreAlertItem>()) }
+    var sosItems by remember { mutableStateOf(listOf<FirestoreAlertItem>()) }
 
     var selectedCategory by remember { mutableStateOf(AlertCategory.ALL) }
     var categorySheetOpen by remember { mutableStateOf(false) }
     var filterSheetOpen by remember { mutableStateOf(false) }
 
-    // temp values inside sheets
     var tempCategory by remember { mutableStateOf(selectedCategory) }
 
-    // (Optional) filter placeholders — you can expand later
     val filterOptions = listOf("Newest", "Oldest")
     var selectedSort by remember { mutableStateOf(filterOptions[0]) }
     var tempSort by remember { mutableStateOf(selectedSort) }
 
-    val displayedItems = items
+    DisposableEffect(Unit) {
+        val reportsListener: ListenerRegistration =
+            db.collection("reports")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    reportItems = snapshot?.documents?.mapNotNull { doc ->
+                        val incidentType = doc.getString("incidentType") ?: return@mapNotNull null
+                        val location = doc.getString("location") ?: "Unknown location"
+                        val status = doc.getString("status") ?: "PENDING"
+                        val description = doc.getString("description") ?: "No description provided."
+                        val createdAt = doc.getLong("createdAt") ?: 0L
+                        val reporterName =
+                            doc.getString("reportedBy")
+                                ?: doc.getString("userName")
+                                ?: doc.getString("name")
+                                ?: "User"
+
+                        FirestoreAlertItem(
+                            id = doc.id,
+                            type = mapIncidentTypeToCategory(incidentType),
+                            title = incidentType,
+                            timeRight = formatDateTime(createdAt),
+                            location = location,
+                            statusLabel = formatStatus(status),
+                            statusColor = getStatusColor(status),
+                            messagePreview = "\"${description.take(80)}${if (description.length > 80) "..." else ""}\"",
+                            rawDescription = description,
+                            reportedBy = reporterName,
+                            categoryText = buildCategoryText(incidentType, false),
+                            dateTimeText = formatDateTime(createdAt),
+                            createdAt = createdAt,
+                            source = "REPORT",
+                            activityLogs = buildActivityLogs(
+                                createdAt = createdAt,
+                                status = status,
+                                source = "REPORT"
+                            )
+                        )
+                    } ?: emptyList()
+                }
+
+        val sosListener: ListenerRegistration =
+            db.collection("sos_alerts")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    sosItems = snapshot?.documents?.mapNotNull { doc ->
+                        val location =
+                            doc.getString("location")
+                                ?: doc.getString("address")
+                                ?: "Unknown location"
+
+                        val status = doc.getString("status") ?: "CRITICAL"
+                        val message =
+                            doc.getString("message")
+                                ?: doc.getString("description")
+                                ?: "SOS alert triggered."
+                        val createdAt = doc.getLong("createdAt") ?: 0L
+                        val reporterName =
+                            doc.getString("reportedBy")
+                                ?: doc.getString("userName")
+                                ?: doc.getString("name")
+                                ?: "User"
+
+                        FirestoreAlertItem(
+                            id = doc.id,
+                            type = AlertCategory.SECURITY,
+                            title = "SOS Alert",
+                            timeRight = formatDateTime(createdAt),
+                            location = location,
+                            statusLabel = formatStatus(status),
+                            statusColor = getStatusColor(status),
+                            messagePreview = "\"${message.take(80)}${if (message.length > 80) "..." else ""}\"",
+                            rawDescription = message,
+                            reportedBy = reporterName,
+                            categoryText = "🆘 SOS Alert",
+                            dateTimeText = formatDateTime(createdAt),
+                            createdAt = createdAt,
+                            source = "SOS",
+                            activityLogs = buildActivityLogs(
+                                createdAt = createdAt,
+                                status = status,
+                                source = "SOS"
+                            )
+                        )
+                    } ?: emptyList()
+                }
+
+        onDispose {
+            reportsListener.remove()
+            sosListener.remove()
+        }
+    }
+
+    val allItems = (reportItems + sosItems)
+
+    val displayedItems = allItems
         .filter { selectedCategory == AlertCategory.ALL || it.type == selectedCategory }
         .let { list ->
             when (selectedSort) {
-                "Oldest" -> list.reversed()
-                else -> list
+                "Oldest" -> list.sortedBy { it.createdAt }
+                else -> list.sortedByDescending { it.createdAt }
             }
         }
 
@@ -120,7 +211,6 @@ fun UserAlertScreen(
         ) {
             UserHeader()
 
-            // Top pills row (CATEGORY + FILTER) — like screenshot
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -157,20 +247,87 @@ fun UserAlertScreen(
                 contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(displayedItems) { item ->
-                    UserAlertCard(
-                        item = item,
-                        bg = cardBg,
-                        border = border,
-                        onViewDetails = { navController.navigate("UserAlertDetails_Screen") }
-                    )
+                if (displayedItems.isEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, border, RoundedCornerShape(14.dp)),
+                            shape = RoundedCornerShape(14.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(cardBg)
+                                    .padding(18.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No alerts found.",
+                                    fontSize = 14.sp,
+                                    color = UserUI.DarkBlue,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(displayedItems) { item ->
+                        UserAlertCard(
+                            item = item,
+                            bg = cardBg,
+                            border = border,
+                            onViewDetails = {
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_id", item.id)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_report_id", "Report ID: ${item.id}")
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_status_text", item.statusLabel)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_category_text", item.categoryText)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_date_time_text", item.dateTimeText)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_location_text", item.location)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_description_text", item.rawDescription)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_reported_by_text", item.reportedBy)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_source_text", item.source)
+
+                                navController.currentBackStackEntry
+                                    ?.savedStateHandle
+                                    ?.set("alert_activity_logs", ArrayList(item.activityLogs))
+
+                                navController.navigate("UserAlertDetails_Screen")
+                            }
+                        )
+                    }
                 }
 
                 item { Spacer(modifier = Modifier.height(90.dp)) }
             }
         }
 
-        // Bottom navbar pinned (like AdminCheckInPage)
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             UserNavBar(
                 modifier = Modifier,
@@ -179,7 +336,6 @@ fun UserAlertScreen(
         }
     }
 
-    // CATEGORY bottom sheet
     if (categorySheetOpen) {
         ModalBottomSheet(onDismissRequest = { categorySheetOpen = false }) {
             Column(
@@ -215,7 +371,9 @@ fun UserAlertScreen(
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = { tempCategory = AlertCategory.ALL }
-                    ) { Text("Reset") }
+                    ) {
+                        Text("Reset")
+                    }
 
                     Button(
                         modifier = Modifier.weight(1f),
@@ -223,7 +381,9 @@ fun UserAlertScreen(
                             selectedCategory = tempCategory
                             categorySheetOpen = false
                         }
-                    ) { Text("Apply") }
+                    ) {
+                        Text("Apply")
+                    }
                 }
 
                 Spacer(Modifier.height(22.dp))
@@ -231,7 +391,6 @@ fun UserAlertScreen(
         }
     }
 
-    // FILTER bottom sheet (simple sort for now)
     if (filterSheetOpen) {
         ModalBottomSheet(onDismissRequest = { filterSheetOpen = false }) {
             Column(
@@ -270,7 +429,9 @@ fun UserAlertScreen(
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
                         onClick = { tempSort = filterOptions[0] }
-                    ) { Text("Reset") }
+                    ) {
+                        Text("Reset")
+                    }
 
                     Button(
                         modifier = Modifier.weight(1f),
@@ -278,7 +439,9 @@ fun UserAlertScreen(
                             selectedSort = tempSort
                             filterSheetOpen = false
                         }
-                    ) { Text("Apply") }
+                    ) {
+                        Text("Apply")
+                    }
                 }
 
                 Spacer(Modifier.height(22.dp))
@@ -312,7 +475,7 @@ private fun SmallPillButton(
 
 @Composable
 private fun UserAlertCard(
-    item: UserAlertItem,
+    item: FirestoreAlertItem,
     bg: Color,
     border: Color,
     onViewDetails: () -> Unit
@@ -320,7 +483,7 @@ private fun UserAlertCard(
     val icon = when (item.type) {
         AlertCategory.POWER -> "⚡"
         AlertCategory.MEDICAL -> "🩺"
-        AlertCategory.SECURITY -> "⚠️"
+        AlertCategory.SECURITY -> if (item.source == "SOS") "🆘" else "⚠️"
         AlertCategory.WEATHER -> "🌧️"
         AlertCategory.ALL -> "🔔"
     }
@@ -337,7 +500,10 @@ private fun UserAlertCard(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top
         ) {
-            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(icon, fontSize = 16.sp)
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -406,4 +572,75 @@ private fun UserAlertCard(
             )
         }
     }
+}
+
+private fun mapIncidentTypeToCategory(incidentType: String): AlertCategory {
+    return when (incidentType.trim().uppercase()) {
+        "POWER OUTAGE", "POWER" -> AlertCategory.POWER
+        "MEDICAL EMERGENCY", "MEDICAL" -> AlertCategory.MEDICAL
+        "SUSPICIOUS ACTIVITY", "THEFT", "HARASSMENT", "SECURITY", "OTHER" -> AlertCategory.SECURITY
+        "FLOOD", "HEAVY RAIN", "STORM", "WEATHER" -> AlertCategory.WEATHER
+        else -> AlertCategory.SECURITY
+    }
+}
+
+private fun getStatusColor(status: String): Color {
+    return when (status.trim().uppercase()) {
+        "PENDING" -> Color(0xFFF4B400)
+        "RESPONDING" -> Color(0xFFFF9800)
+        "ACKNOWLEDGED" -> Color(0xFFF4B400)
+        "RESOLVED", "SAFE" -> UserUI.Green
+        "RESTRICTED", "CRITICAL" -> Color(0xFFE53935)
+        else -> Color.Gray
+    }
+}
+
+private fun formatStatus(status: String): String {
+    return status.lowercase()
+        .split(" ")
+        .joinToString(" ") { word ->
+            word.replaceFirstChar { it.uppercase() }
+        }
+}
+
+private fun formatDateTime(timestamp: Long): String {
+    if (timestamp <= 0L) return "Unknown time"
+    return SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault()).format(Date(timestamp))
+}
+
+private fun buildCategoryText(title: String, isSos: Boolean): String {
+    if (isSos) return "🆘 SOS Alert"
+
+    return when (mapIncidentTypeToCategory(title)) {
+        AlertCategory.POWER -> "⚡ $title"
+        AlertCategory.MEDICAL -> "🩺 $title"
+        AlertCategory.SECURITY -> "⚠️ $title"
+        AlertCategory.WEATHER -> "🌧️ $title"
+        AlertCategory.ALL -> "🔔 $title"
+    }
+}
+
+private fun buildActivityLogs(
+    createdAt: Long,
+    status: String,
+    source: String
+): List<String> {
+    val timeText = if (createdAt > 0L) {
+        SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(createdAt))
+    } else {
+        "Unknown time"
+    }
+
+    val logs = mutableListOf<String>()
+    logs.add("$timeText – ${if (source == "SOS") "SOS alert sent" else "Alert sent"}")
+
+    when (status.trim().uppercase()) {
+        "PENDING" -> logs.add("$timeText – Waiting for response")
+        "RESPONDING" -> logs.add("$timeText – Security/admin is responding")
+        "ACKNOWLEDGED" -> logs.add("$timeText – Acknowledged by admin")
+        "RESOLVED", "SAFE" -> logs.add("$timeText – Incident resolved")
+        "CRITICAL", "RESTRICTED" -> logs.add("$timeText – High-priority alert")
+    }
+
+    return logs
 }

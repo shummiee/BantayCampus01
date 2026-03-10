@@ -1,13 +1,29 @@
 package com.example.bantaycampus01.screens.Admin.PopUps
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,11 +33,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.ui.theme.DarkGrayBlue
+import com.example.bantaycampus01.ui.theme.TextOnDark
+import com.example.bantaycampus01.ui.theme.TextOnWhite
+import com.example.bantaycampus01.ui.theme.White
 
 @Composable
 fun AdminDispatchDialog(
     show: Boolean,
+    alertIdLabel: String,
 
     guardA: Boolean, onGuardAChange: (Boolean) -> Unit,
     guardB: Boolean, onGuardBChange: (Boolean) -> Unit,
@@ -62,12 +82,15 @@ fun AdminDispatchDialog(
                     verticalAlignment = Alignment.Top
                 ) {
                     Text(
-                        text = "Alert ID: BC-2026-0045",
+                        text = "Alert ID: $alertIdLabel",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Black,
-                        color = TextOnDark,
+                        color = White,
                         modifier = Modifier
-                            .background(androidx.compose.ui.graphics.Color(0xFF2E3B55), RoundedCornerShape(6.dp))
+                            .background(
+                                androidx.compose.ui.graphics.Color(0xFF2E3B55),
+                                RoundedCornerShape(6.dp)
+                            )
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                     )
 
@@ -94,7 +117,7 @@ fun AdminDispatchDialog(
                 Spacer(Modifier.height(6.dp))
 
                 Text(
-                    text = "Are you sure you want to\nmark this alert as\nResponding and assign\na security unit?",
+                    text = "Are you sure you want to\nmark this alert as\nResponding and assign\na response team?",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,
                     color = TextOnWhite,

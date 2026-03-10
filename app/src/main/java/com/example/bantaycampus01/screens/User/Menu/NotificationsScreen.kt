@@ -22,12 +22,11 @@ import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
-import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
-import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
-// ✅ "Code name" so backend can differentiate later
 enum class NotificationCode {
-    SUSPICIOUS_ACTIVITY,
+    ALERT,
     ANNOUNCEMENT
 }
 
@@ -39,7 +38,8 @@ data class NotificationItem(
     val statusText: String = "",
     val statusDot: Color? = null,
     val leading: String = "🚨",
-    val isQuoteSubtitle: Boolean = false
+    val isQuoteSubtitle: Boolean = false,
+    val updatedAt: Long = 0L
 )
 
 @Composable
@@ -48,40 +48,87 @@ fun NotificationsScreen(
     navController: NavController,
     userName: String = "User"
 ) {
-    var showReportDetail by rememberSaveable { mutableStateOf(false) }
+    val db = remember { FirebaseFirestore.getInstance() }
 
-    // ✅ this is the important state (owned by the SCREEN)
-    var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
+    var notifications by rememberSaveable { mutableStateOf(listOf<NotificationItem>()) }
 
-    val notifications = remember {
-        listOf(
-            NotificationItem(
-                code = NotificationCode.SUSPICIOUS_ACTIVITY,
-                time = "1 minute ago",
-                title = "Suspicious Activity",
-                subtitle = "Near Library Entrance",
-                statusText = "Status: Responding",
-                statusDot = Color(0xFFF4B400),
-                leading = "🚨"
-            ),
-            NotificationItem(
-                code = NotificationCode.SUSPICIOUS_ACTIVITY,
-                time = "5 minutes ago",
-                title = "Suspicious Activity",
-                subtitle = "Near Library Entrance",
-                statusText = "Status: Resolved",
-                statusDot = UserUI.Green,
-                leading = "🚨"
-            ),
-            NotificationItem(
-                code = NotificationCode.ANNOUNCEMENT,
-                time = "25 minutes ago",
-                title = "New Announcement",
-                subtitle = "“There’s an chuchuchu...”",
-                leading = "📣",
-                isQuoteSubtitle = true
-            )
-        )
+    DisposableEffect(Unit) {
+        var advisoryItem: NotificationItem? = null
+        var statusItem: NotificationItem? = null
+
+        fun rebuildList() {
+            notifications = listOfNotNull(statusItem, advisoryItem)
+                .sortedByDescending { it.updatedAt }
+        }
+
+        val statusListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("status")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val status = snapshot.getString("status") ?: "SAFE"
+                        val message = snapshot.getString("message")
+                            ?: "Campus status has been updated."
+                        val updatedAt = snapshot.getLong("updatedAt") ?: 0L
+
+                        val dotColor = when (status.uppercase()) {
+                            "SAFE", "RESOLVED" -> UserUI.Green
+                            "CAUTION" -> Color(0xFFF4B400)
+                            "RESTRICTED" -> Color(0xFFE53935)
+                            else -> UserUI.Green
+                        }
+
+                        statusItem = NotificationItem(
+                            code = NotificationCode.ALERT,
+                            time = formatTimeAgo(updatedAt),
+                            title = "Campus Alert",
+                            subtitle = message,
+                            statusText = "Status: $status",
+                            statusDot = dotColor,
+                            leading = "🚨",
+                            isQuoteSubtitle = false,
+                            updatedAt = updatedAt
+                        )
+                    } else {
+                        statusItem = null
+                    }
+
+                    rebuildList()
+                }
+
+        val advisoryListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("advisory")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val message = snapshot.getString("message")
+                            ?: "There is a new campus announcement."
+                        val updatedAt = snapshot.getLong("updatedAt") ?: 0L
+
+                        advisoryItem = NotificationItem(
+                            code = NotificationCode.ANNOUNCEMENT,
+                            time = formatTimeAgo(updatedAt),
+                            title = "New Announcement",
+                            subtitle = "“$message”",
+                            leading = "📣",
+                            isQuoteSubtitle = true,
+                            updatedAt = updatedAt
+                        )
+                    } else {
+                        advisoryItem = null
+                    }
+
+                    rebuildList()
+                }
+
+        onDispose {
+            statusListener.remove()
+            advisoryListener.remove()
+        }
     }
 
     Scaffold(
@@ -108,49 +155,44 @@ fun NotificationsScreen(
                 color = UserUI.DarkBlue
             )
 
-            notifications.forEach { item ->
-                NotificationRow(
-                    item = item,
-                    onClick = {
-                        when (item.code) {
-                            NotificationCode.SUSPICIOUS_ACTIVITY -> showReportDetail = true
-                            NotificationCode.ANNOUNCEMENT -> navController.navigate("UserSafety_Screen")
-                        }
+            if (notifications.isEmpty()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            1.dp,
+                            UserUI.DarkBlue.copy(alpha = 0.25f),
+                            RoundedCornerShape(14.dp)
+                        ),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE6E6E6)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 20.dp, horizontal = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No notifications yet.",
+                            fontSize = 14.sp,
+                            color = UserUI.DarkBlue
+                        )
                     }
-                )
+                }
+            } else {
+                notifications.forEach { item ->
+                    NotificationRow(
+                        item = item,
+                        onClick = {
+                            navController.navigate("UserSafety_Screen")
+                        }
+                    )
+                }
             }
         }
     }
-
-    // ✅ Report detail popup
-    ReportDetailDialog(
-        show = showReportDetail,
-        reportIdLabel = "Report ID: #BC-2026-0145",
-        statusLabel = "Responding",
-        category = "🚨 Suspicious Activity",
-        dateTime = "Feb 3, 2026 – 9:23AM",
-        location = "Near Library Entrance",
-        description = "There is a person acting suspiciously near the stairs, checking doors and following students.",
-        hasAttachment = true,
-        onViewAttachment = { /* TODO */ },
-
-        // ✅ where you will connect backend later:
-        onMarkSafe = {
-            // TODO: update backend + local UI state
-        },
-
-        // ✅ show thank-you dialog AFTER closing report dialog
-        onShowMarkedSafe = { showMarkedSafeDialog = true },
-
-        onDismiss = { showReportDetail = false }
-    )
-
-    // ✅ Thank-you dialog (this is what your screenshot shows)
-    MarkSafeDialog(
-        show = showMarkedSafeDialog,
-        onConfirm = { showMarkedSafeDialog = false }, // CLOSE
-        onDismiss = { showMarkedSafeDialog = false }
-    )
 }
 
 @Composable
@@ -207,6 +249,7 @@ private fun NotificationRow(
                         Text(text = "📍", fontSize = 12.sp)
                         Spacer(Modifier.width(6.dp))
                     }
+
                     Text(
                         text = item.subtitle,
                         fontSize = 12.sp,
@@ -223,6 +266,7 @@ private fun NotificationRow(
                             fontSize = 12.sp,
                             color = UserUI.DarkBlue
                         )
+
                         if (item.statusDot != null) {
                             Spacer(Modifier.width(8.dp))
                             Box(
@@ -236,6 +280,7 @@ private fun NotificationRow(
             }
 
             Spacer(Modifier.width(10.dp))
+
             Text(
                 text = "→",
                 fontSize = 18.sp,
@@ -243,5 +288,23 @@ private fun NotificationRow(
                 color = UserUI.DarkBlue
             )
         }
+    }
+}
+
+private fun formatTimeAgo(timestamp: Long): String {
+    if (timestamp <= 0L) return "Just now"
+
+    val diffMillis = System.currentTimeMillis() - timestamp
+    val seconds = diffMillis / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+
+    return when {
+        seconds < 60 -> "Just now"
+        minutes < 60 -> "$minutes minute${if (minutes > 1) "s" else ""} ago"
+        hours < 24 -> "$hours hour${if (hours > 1) "s" else ""} ago"
+        days < 7 -> "$days day${if (days > 1) "s" else ""} ago"
+        else -> "A while ago"
     }
 }

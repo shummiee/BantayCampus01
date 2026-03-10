@@ -31,6 +31,11 @@ import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
+import android.widget.Toast
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bantaycampus01.viewmodel.ReportViewModel
 
 @Composable
 fun UserSafetyScreen(
@@ -124,6 +129,8 @@ fun UserSafetyPageUI(
     }
 
     val screenScroll = rememberScrollState()
+    val context = LocalContext.current
+    val reportViewModel: ReportViewModel = viewModel()
 
     // ✅ blueprint style: use rememberSaveable like your UserHomePage
     var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
@@ -170,7 +177,24 @@ fun UserSafetyPageUI(
                 Button(
                     onClick = {
                         onClockClick()
-                        showMarkedSafeDialog = true
+
+                        reportViewModel.markUserSafe(
+                            onSuccess = {
+                                showMarkedSafeDialog = true
+                                Toast.makeText(
+                                    context,
+                                    "Check-in successful.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            onFailure = {
+                                Toast.makeText(
+                                    context,
+                                    "Failed to check in: ${it.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        )
                     },
                     shape = RoundedCornerShape(50),
                     contentPadding = PaddingValues(0.dp),

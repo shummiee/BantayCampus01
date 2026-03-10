@@ -54,6 +54,7 @@ import com.example.bantaycampus01.screens.User.Menu.PopUps.UrgencyLevel
 import com.example.bantaycampus01.ui.theme.TextOnDark
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.viewmodel.ReportViewModel
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun UserHomePage(
@@ -105,6 +106,12 @@ fun UserHomePage(
     }
 
     val reportViewModel: ReportViewModel = viewModel()
+    LaunchedEffect(Unit) {
+        reportViewModel.refreshSafetyStatusIfExpired(
+            onComplete = { },
+            onFailure = { }
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -215,7 +222,25 @@ fun UserHomePage(
                             }
 
                             Surface(
-                                onClick = { showMarkedSafeDialog = true },
+                                onClick = {
+                                    reportViewModel.markUserSafe(
+                                        onSuccess = {
+                                            showMarkedSafeDialog = true
+                                            Toast.makeText(
+                                                context,
+                                                "Check-in successful.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        onFailure = {
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to check in: ${it.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    )
+                                },
                                 shape = RoundedCornerShape(22.dp),
                                 color = UserUI.DarkBlue
                             ) {

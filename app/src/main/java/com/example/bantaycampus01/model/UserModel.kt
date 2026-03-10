@@ -9,5 +9,7 @@ data class UserModel(
     val dob: String = "",
     val role: String = "",
 
-    val accountId: String
+    val accountId: String,
+    val lastCheckIn: Long? = null,
+    val safetyStatus: String = "UNKNOWN"
 )

@@ -1,5 +1,6 @@
 package com.example.bantaycampus01.screens.User
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,6 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,11 +35,14 @@ import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
-import android.widget.Toast
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.viewmodel.ReportViewModel
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun UserSafetyScreen(
@@ -44,24 +51,20 @@ fun UserSafetyScreen(
 
     userName: String = "User",
 
-    // Top strip
     currentStatusText: String = "Current Status: ALL SAFE",
     lastCheckinText: String = "Last Student Check-in 10 minutes ago",
 
-    // Advisory
     advisoryTitle: String = "Campus Security Advisory",
     advisoryTime: String = "10:45 AM • Ongoing",
     advisoryHeadline: String = "Attention Students!",
     advisoryBody: String =
         "There is a power outage at the Academic Building that is currently being resolved.\nPlease take caution.",
 
-    // Campus Update
     campusUpdateTitle: String = "CAMPUS UPDATE",
     campusUpdateStatus: String = "SAFE",
     campusUpdateMessage: String = "\"Normal campus operations. No immediate threats reported.\"",
     campusUpdateTime: String = "10:45 AM",
 
-    // Actions / navigation hooks
     onClockClick: () -> Unit = {},
     onViewAdvisoryClick: () -> Unit = {},
     onViewContactsClick: () -> Unit = {},
@@ -120,20 +123,111 @@ fun UserSafetyPageUI(
     val advisoryBorder = UserUI.DangerRed
     val cardBg = UserUI.CardBg
 
-    val statusDot = when (campusUpdateStatus.uppercase()) {
-        "SAFE" -> UserUI.Green
-        "CAUTION" -> Color(0xFFF4B400)
-        "RESTRICTED" -> Color(0xFFE53935)
-        "RESOLVED" -> UserUI.Green
-        else -> UserUI.Green
-    }
-
     val screenScroll = rememberScrollState()
     val context = LocalContext.current
     val reportViewModel: ReportViewModel = viewModel()
+    val db = remember { FirebaseFirestore.getInstance() }
 
-    // ✅ blueprint style: use rememberSaveable like your UserHomePage
     var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
+
+    var currentStatusState by rememberSaveable { mutableStateOf(currentStatusText) }
+    var lastCheckinState by rememberSaveable { mutableStateOf(lastCheckinText) }
+
+    var advisoryTitleState by rememberSaveable { mutableStateOf(advisoryTitle) }
+    var advisoryTimeState by rememberSaveable { mutableStateOf(advisoryTime) }
+    var advisoryHeadlineState by rememberSaveable { mutableStateOf(advisoryHeadline) }
+    var advisoryBodyState by rememberSaveable { mutableStateOf(advisoryBody) }
+
+    var campusUpdateTitleState by rememberSaveable { mutableStateOf(campusUpdateTitle) }
+    var campusUpdateStatusState by rememberSaveable { mutableStateOf(campusUpdateStatus) }
+    var campusUpdateMessageState by rememberSaveable { mutableStateOf(campusUpdateMessage) }
+    var campusUpdateTimeState by rememberSaveable { mutableStateOf(campusUpdateTime) }
+
+    val statusDot = when (campusUpdateStatusState.uppercase()) {
+        "SAFE", "RESOLVED" -> UserUI.Green
+        "CAUTION" -> Color(0xFFF4B400)
+        "RESTRICTED" -> Color(0xFFE53935)
+        else -> UserUI.Green
+    }
+
+    LaunchedEffect(Unit) {
+        reportViewModel.refreshSafetyStatusIfExpired(
+            onComplete = { },
+            onFailure = { }
+        )
+    }
+
+    DisposableEffect(Unit) {
+        val advisoryListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("advisory")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val advisoryMessage = snapshot.getString("message") ?: advisoryBody
+                        val updatedAt = snapshot.getLong("updatedAt") ?: 0L
+
+                        advisoryTitleState = advisoryTitle
+                        advisoryHeadlineState = "Attention Students!"
+                        advisoryBodyState = advisoryMessage
+
+                        advisoryTimeState =
+                            if (updatedAt > 0L) {
+                                SimpleDateFormat(
+                                    "h:mm a",
+                                    Locale.getDefault()
+                                ).format(Date(updatedAt)) + " • Ongoing"
+                            } else {
+                                advisoryTime
+                            }
+                    }
+                }
+
+        val statusListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("status")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val status = snapshot.getString("status") ?: campusUpdateStatus
+                        val message = snapshot.getString("message") ?: campusUpdateMessage
+                        val updatedAt = snapshot.getLong("updatedAt") ?: 0L
+
+                        campusUpdateTitleState = campusUpdateTitle
+                        campusUpdateStatusState = status
+                        campusUpdateMessageState = message
+
+                        currentStatusState = "Current Status: $status"
+
+                        campusUpdateTimeState =
+                            if (updatedAt > 0L) {
+                                SimpleDateFormat(
+                                    "h:mm a",
+                                    Locale.getDefault()
+                                ).format(Date(updatedAt))
+                            } else {
+                                campusUpdateTime
+                            }
+
+                        lastCheckinState =
+                            if (updatedAt > 0L) {
+                                "Last updated " + SimpleDateFormat(
+                                    "MMM d, yyyy - h:mm a",
+                                    Locale.getDefault()
+                                ).format(Date(updatedAt))
+                            } else {
+                                lastCheckinText
+                            }
+                    }
+                }
+
+        onDispose {
+            advisoryListener.remove()
+            statusListener.remove()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -147,10 +241,8 @@ fun UserSafetyPageUI(
                 .verticalScroll(screenScroll)
         ) {
 
-            // Header (User)
             UserHeader()
 
-            // Top status strip
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,20 +252,19 @@ fun UserSafetyPageUI(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = currentStatusText,
+                        text = currentStatusState,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
                     )
                     Text(
-                        text = lastCheckinText,
+                        text = lastCheckinState,
                         fontSize = 12.sp,
                         color = Color.White.copy(alpha = 0.9f),
                         fontStyle = FontStyle.Italic
                     )
                 }
 
-                // ✅ CHANGED: MARK SAFE pill button (matches UserHomePage blueprint)
                 Button(
                     onClick = {
                         onClockClick()
@@ -209,7 +300,6 @@ fun UserSafetyPageUI(
 
             Spacer(Modifier.height(12.dp))
 
-            // Advisory card (bordered)
             Column(
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
@@ -222,14 +312,14 @@ fun UserSafetyPageUI(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "👤  $advisoryTitle",
+                        text = "👤  $advisoryTitleState",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Black,
                         color = UserUI.DarkBlue
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
-                        text = advisoryTime,
+                        text = advisoryTimeState,
                         fontSize = 9.sp,
                         color = UserUI.DarkBlue.copy(alpha = 0.7f)
                     )
@@ -238,7 +328,7 @@ fun UserSafetyPageUI(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = advisoryHeadline,
+                    text = advisoryHeadlineState,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Black,
                     color = advisoryBorder
@@ -247,7 +337,7 @@ fun UserSafetyPageUI(
                 Spacer(Modifier.height(4.dp))
 
                 Text(
-                    text = advisoryBody,
+                    text = advisoryBodyState,
                     fontSize = 12.sp,
                     color = UserUI.DarkBlue,
                     lineHeight = 14.sp
@@ -256,9 +346,8 @@ fun UserSafetyPageUI(
 
             Spacer(Modifier.height(14.dp))
 
-            // Campus Update title
             Text(
-                text = campusUpdateTitle,
+                text = campusUpdateTitleState,
                 modifier = Modifier.padding(horizontal = 14.dp),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
@@ -267,7 +356,6 @@ fun UserSafetyPageUI(
 
             Spacer(Modifier.height(8.dp))
 
-            // Campus Update card
             Column(
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
@@ -278,7 +366,7 @@ fun UserSafetyPageUI(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Status: $campusUpdateStatus",
+                        text = "Status: $campusUpdateStatusState",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White
@@ -297,7 +385,7 @@ fun UserSafetyPageUI(
                 Spacer(Modifier.height(10.dp))
 
                 Text(
-                    text = campusUpdateMessage,
+                    text = campusUpdateMessageState,
                     fontSize = 14.sp,
                     color = Color.White,
                     lineHeight = 14.sp,
@@ -308,7 +396,7 @@ fun UserSafetyPageUI(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = campusUpdateTime,
+                    text = campusUpdateTimeState,
                     fontSize = 12.sp,
                     color = Color.White.copy(alpha = 0.85f),
                     modifier = Modifier.align(Alignment.End)
@@ -317,7 +405,6 @@ fun UserSafetyPageUI(
 
             Spacer(Modifier.height(14.dp))
 
-            // Info panels row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -335,7 +422,7 @@ fun UserSafetyPageUI(
                         title = "ADMIN",
                         body = "+63 912 3456 789",
                         onClick = {
-                            // TODO: open admin contact
+                            onViewContactsClick()
                         }
                     )
 
@@ -345,7 +432,7 @@ fun UserSafetyPageUI(
                         title = "GUARD",
                         body = "+63 912 3456 789",
                         onClick = {
-                            // TODO: open guard contact
+                            onViewContactsClick()
                         }
                     )
 
@@ -355,11 +442,10 @@ fun UserSafetyPageUI(
                         title = "CLINIC",
                         body = "+63 912 3456 789",
                         onClick = {
-                            // TODO: open clinic contact
+                            onViewContactsClick()
                         }
                     )
                 }
-
 
                 InfoPanel(
                     modifier = Modifier.weight(1f),
@@ -372,7 +458,7 @@ fun UserSafetyPageUI(
                         title = "ACADEMIC BUILDING",
                         body = "2ND FLOOR",
                         onClick = {
-                            // TODO: open 2nd floor map
+                            onViewMapsClick()
                         }
                     )
 
@@ -382,7 +468,7 @@ fun UserSafetyPageUI(
                         title = "ACADEMIC BUILDING",
                         body = "3RD FLOOR",
                         onClick = {
-                            // TODO: open 3rd floor map
+                            onViewMapsClick()
                         }
                     )
 
@@ -392,7 +478,7 @@ fun UserSafetyPageUI(
                         title = "ACADEMIC BUILDING",
                         body = "4TH FLOOR",
                         onClick = {
-                            // TODO: open 4th floor map
+                            onViewMapsClick()
                         }
                     )
                 }
@@ -401,7 +487,6 @@ fun UserSafetyPageUI(
             Spacer(Modifier.height(90.dp))
         }
 
-        // Bottom navbar pinned
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             UserNavBar(
                 modifier = Modifier,
@@ -409,7 +494,6 @@ fun UserSafetyPageUI(
             )
         }
 
-        // ✅ Mark Safe success dialog
         MarkSafeDialog(
             show = showMarkedSafeDialog,
             onConfirm = { showMarkedSafeDialog = false },

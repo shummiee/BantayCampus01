@@ -80,7 +80,10 @@ fun AdminAlertPage(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     fun mergeAlerts() {
-        val combined = (reportsCache + sosCache).sortedByDescending { it.createdAt }
+        val combined = (reportsCache + sosCache)
+            .filter { it.status.uppercase() != "RESOLVED" }
+            .sortedByDescending { it.createdAt }
+
         alerts.clear()
         alerts.addAll(combined)
     }

@@ -67,11 +67,7 @@ fun AdminHomePage(
 
     adminName: String = "Admin",
     dateText: String = "February 3, 2026",
-    alertsCount: Int = 8,
-    activeCases: Int = 1,
     avgResponse: String = "1 min. 15 secs.",
-    studentCheckIn: Int = 415,
-    campusRiskSafe: Boolean = true,
     lastUpdatedText: String = "Last Updated 10:45 am by Admin",
     safetyTitle: String = "SAFETY UPDATE",
     safetyMessage: String = "Power outage at Academic Building",
@@ -80,6 +76,11 @@ fun AdminHomePage(
 
     onRiskControlClick: () -> Unit = {}
 ) {
+    // Dashboard
+    var alertsCount by remember { mutableStateOf(0) }
+    var activeCases by remember { mutableStateOf(0) }
+    var studentCheckIn by remember { mutableStateOf(0) }
+
     val header = DarkGrayBlue
     val screenScroll = rememberScrollState()
     val db = remember { FirebaseFirestore.getInstance() }
@@ -108,6 +109,58 @@ fun AdminHomePage(
         "RESTRICTED" -> Color(0xFFE53935)
         "RESOLVED" -> Color(0xFF29C65E)
         else -> Color(0xFF29C65E)
+    }
+
+    //Dashboard
+    DisposableEffect(Unit) {
+
+        val reportsListener =
+            db.collection("reports")
+                .addSnapshotListener { snapshot, _ ->
+                    if (snapshot != null) {
+
+                        alertsCount = snapshot.size()
+
+                        activeCases =
+                            snapshot.documents.count {
+                                it.getString("status") != "RESOLVED"
+                            }
+                    }
+                }
+
+        val sosListener =
+            db.collection("sos_alerts")
+                .addSnapshotListener { snapshot, _ ->
+                    if (snapshot != null) {
+
+                        alertsCount += snapshot.size()
+
+                        activeCases +=
+                            snapshot.documents.count {
+                                it.getString("status") != "RESOLVED"
+                            }
+                    }
+                }
+
+        val checkinListener =
+            db.collection("users")
+                .addSnapshotListener { snapshot, _ ->
+
+                    if (snapshot != null) {
+
+                        studentCheckIn =
+                            snapshot.documents.count {
+                                it.getString("safetyStatus")?.uppercase() == "SAFE"
+                            }
+
+                    }
+                }
+
+        onDispose {
+            reportsListener.remove()
+            sosListener.remove()
+            checkinListener.remove()
+        }
     }
 
     // Load advisory from Firestore

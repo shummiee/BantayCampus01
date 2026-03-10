@@ -31,6 +31,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,20 +45,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.R
+import com.example.bantaycampus01.model.ReportModel
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
-import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog   // ✅ ADD
+import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportSentDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.SendReportDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.UrgencyLevel
 import com.example.bantaycampus01.ui.theme.TextOnDark
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.viewmodel.ReportViewModel
-import androidx.compose.runtime.LaunchedEffect
-import com.example.bantaycampus01.model.ReportModel
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -79,12 +83,17 @@ fun UserHomePage(
 
     val screenScroll = rememberScrollState()
     val context = LocalContext.current
+    val db = remember { FirebaseFirestore.getInstance() }
+
+    var campusStatusState by rememberSaveable { mutableStateOf(campusStatusText) }
+    var advisoryState by rememberSaveable { mutableStateOf(advisoryText) }
+    var safetyMessageState by rememberSaveable { mutableStateOf(safetyMessage) }
+    var lastUpdatedState by rememberSaveable { mutableStateOf(lastUpdatedText) }
+    var safetyTimeState by rememberSaveable { mutableStateOf(safetyTime) }
 
     var showSendReport by rememberSaveable { mutableStateOf(false) }
     var showReportSent by rememberSaveable { mutableStateOf(false) }
     var showReportStatus by rememberSaveable { mutableStateOf(false) }
-
-    // ✅ NEW: Success dialog after MARK SAFE
     var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
 
     var incidentExpanded by rememberSaveable { mutableStateOf(false) }
@@ -102,9 +111,9 @@ fun UserHomePage(
     var reportDescription by rememberSaveable { mutableStateOf("") }
     var urgency by rememberSaveable { mutableStateOf(UrgencyLevel.MODERATE) }
 
-    var latestReport by rememberSaveable { mutableStateOf<ReportModel?>(null) }
+    var latestReport by remember { mutableStateOf<ReportModel?>(null) }
 
-    val statusDotColor = when (campusStatusText.uppercase()) {
+    val statusDotColor = when (campusStatusState.uppercase()) {
         "SAFE", "RESOLVED" -> UserUI.Green
         "CAUTION" -> Color(0xFFF4B400)
         "RESTRICTED" -> Color(0xFFE53935)
@@ -112,11 +121,71 @@ fun UserHomePage(
     }
 
     val reportViewModel: ReportViewModel = viewModel()
+
     LaunchedEffect(Unit) {
         reportViewModel.refreshSafetyStatusIfExpired(
             onComplete = { },
             onFailure = { }
         )
+    }
+
+    DisposableEffect(Unit) {
+        val advisoryListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("advisory")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        advisoryState = snapshot.getString("message") ?: advisoryText
+
+                        val updatedBy = snapshot.getString("updatedBy") ?: "Admin"
+                        val updatedAt = snapshot.getLong("updatedAt") ?: 0L
+
+                        if (updatedAt > 0L) {
+                            val formattedTime = SimpleDateFormat(
+                                "MMM d, yyyy - h:mm a",
+                                Locale.getDefault()
+                            ).format(Date(updatedAt))
+
+                            lastUpdatedState = "Last Updated $formattedTime by $updatedBy"
+                        }
+                    }
+                }
+
+        val statusListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("status")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        campusStatusState = snapshot.getString("status") ?: campusStatusText
+                        safetyMessageState = snapshot.getString("message") ?: safetyMessage
+
+                        val updatedBy = snapshot.getString("updatedBy") ?: "Admin"
+                        val updatedAt = snapshot.getLong("updatedAt") ?: 0L
+
+                        if (updatedAt > 0L) {
+                            safetyTimeState = SimpleDateFormat(
+                                "h:mm a",
+                                Locale.getDefault()
+                            ).format(Date(updatedAt))
+
+                            val formattedTime = SimpleDateFormat(
+                                "MMM d, yyyy - h:mm a",
+                                Locale.getDefault()
+                            ).format(Date(updatedAt))
+
+                            lastUpdatedState = "Last Updated $formattedTime by $updatedBy"
+                        }
+                    }
+                }
+
+        onDispose {
+            advisoryListener.remove()
+            statusListener.remove()
+        }
     }
 
     Box(
@@ -174,7 +243,7 @@ fun UserHomePage(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Current Campus Status: $campusStatusText",
+                        text = "Current Campus Status: $campusStatusState",
                         color = Color.White,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
@@ -191,7 +260,7 @@ fun UserHomePage(
                 }
 
                 Text(
-                    text = lastUpdatedText,
+                    text = lastUpdatedState,
                     color = Color.White.copy(alpha = 0.8f),
                     fontSize = 12.sp
                 )
@@ -221,7 +290,7 @@ fun UserHomePage(
                                 )
 
                                 Text(
-                                    text = safetyTime,
+                                    text = safetyTimeState,
                                     color = UserUI.DarkBlue.copy(alpha = 0.75f),
                                     fontSize = 11.sp
                                 )
@@ -300,7 +369,7 @@ fun UserHomePage(
                             ) {
 
                                 Text(
-                                    text = safetyMessage,
+                                    text = safetyMessageState,
                                     fontWeight = FontWeight.Black,
                                     color = UserUI.DarkBlue,
                                     fontSize = 18.sp,
@@ -312,7 +381,7 @@ fun UserHomePage(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
 
                                     Text(
-                                        text = "Status: $safetyStatus",
+                                        text = "Status: $campusStatusState",
                                         fontWeight = FontWeight.Bold,
                                         color = UserUI.DarkBlue,
                                         fontSize = 16.sp
@@ -325,7 +394,7 @@ fun UserHomePage(
                                             .size(9.dp)
                                             .clip(CircleShape)
                                             .background(
-                                                when (safetyStatus.uppercase()) {
+                                                when (campusStatusState.uppercase()) {
                                                     "RESOLVED", "SAFE" -> UserUI.Green
                                                     "CAUTION" -> Color(0xFFF4B400)
                                                     "RESTRICTED" -> Color(0xFFE53935)
@@ -359,7 +428,10 @@ fun UserHomePage(
                         bg = UserUI.DangerRed,
                         fg = Color.White,
                         icon = R.drawable.incoming,
-                        onClick = { showSendReport = true }
+                        onClick = {
+                            onSendReportClick()
+                            showSendReport = true
+                        }
                     )
 
                     ActionButton(
@@ -436,7 +508,7 @@ fun UserHomePage(
                         ) {
 
                             Text(
-                                text = advisoryText,
+                                text = advisoryState,
                                 color = UserUI.DarkBlue,
                                 fontSize = 11.sp,
                                 textAlign = TextAlign.Center,
@@ -481,28 +553,21 @@ fun UserHomePage(
             onUrgencyChange = { urgency = it },
             onUploadClick = { },
             onSubmit = {
-
                 reportViewModel.submitReport(
                     incidentType = selectedIncident,
                     location = reportLocation,
                     description = reportDescription,
                     urgency = urgency.label,
-
                     onSuccess = {
-
                         showSendReport = false
                         showReportSent = true
-
                     },
-
                     onFailure = {
-
                         Toast.makeText(
                             context,
                             "Failed to send report",
                             Toast.LENGTH_SHORT
                         ).show()
-
                     }
                 )
             },
@@ -514,7 +579,6 @@ fun UserHomePage(
             onDismiss = { showReportSent = false }
         )
 
-        // ✅ Report Status popup
         ReportDetailDialog(
             show = showReportStatus,
             reportIdLabel = "Report ID: ${latestReport?.reportId ?: "N/A"}",
@@ -543,10 +607,9 @@ fun UserHomePage(
             }
         )
 
-        // ✅ Thank-you popup (shows after MARK SAFE)
         MarkSafeDialog(
             show = showMarkedSafeDialog,
-            onConfirm = { showMarkedSafeDialog = false }, // CLOSE
+            onConfirm = { showMarkedSafeDialog = false },
             onDismiss = { showMarkedSafeDialog = false }
         )
     }
@@ -579,6 +642,7 @@ private fun ActionButton(
                 contentDescription = null,
                 modifier = Modifier.size(35.dp)
             )
+
             Spacer(modifier = Modifier.width(10.dp))
 
             Text(

@@ -23,7 +23,7 @@ import com.example.bantaycampus01.screens.User.UserAlertScreen
 import com.example.bantaycampus01.screens.User.UserHomePage
 import com.example.bantaycampus01.screens.User.UserProfileScreen
 import com.example.bantaycampus01.screens.User.UserSafetyScreen
-import com.example.bantaycampus01.screens.User.Menu.ReportHistoryScreen
+import com.example.bantaycampus01.screens.User.ReportHistoryScreen
 import com.example.bantaycampus01.screens.User.Menu.NotificationsScreen
 import com.example.bantaycampus01.screens.User.Menu.SchoolContactsScreen
 import com.google.firebase.Firebase

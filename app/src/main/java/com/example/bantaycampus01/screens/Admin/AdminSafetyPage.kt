@@ -5,7 +5,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -23,21 +22,22 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
-import com.example.bantaycampus01.ui.theme.*
+import com.example.bantaycampus01.screens.Admin.PopUps.AdminAdvisoryDialog
+import com.example.bantaycampus01.screens.Admin.PopUps.AdminCampusStatusDialog
 import com.example.bantaycampus01.screens.Admin.PopUps.CAMPUS_STATUS_OPTIONS
-
-// ✅ POPUPS: import from Admin.PopUps package
-import com.example.bantaycampus01.screens.Admin.PopUps.*
+import com.example.bantaycampus01.ui.theme.*
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 @Composable
 fun AdminSafetyPage(
     modifier: Modifier,
     navController: NavController,
-
     adminName: String = "Admin",
-
     onGoToCheckInPage: () -> Unit = {},
 ) {
+    val db = remember { FirebaseFirestore.getInstance() }
+
     var showAdvisoryDialog by rememberSaveable { mutableStateOf(false) }
     var showCampusDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -62,67 +62,134 @@ fun AdminSafetyPage(
     var tempCampusStatus by rememberSaveable { mutableStateOf(campusStatus) }
     var tempCampusNote by rememberSaveable { mutableStateOf(campusMessage.trim('"')) }
 
+    DisposableEffect(Unit) {
+        val advisoryListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("advisory")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        advisoryBody = snapshot.getString("message")
+                            ?: "No campus advisory available."
+                        advisoryTime = "Now • Ongoing"
+                    }
+                }
+
+        onDispose {
+            advisoryListener.remove()
+        }
+    }
+
+    DisposableEffect(Unit) {
+        val statusListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("status")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val dbStatus = snapshot.getString("status") ?: "SAFE"
+                        val dbMessage = snapshot.getString("message")
+                            ?: "Normal campus operations. No immediate threats reported."
+
+                        campusStatus = dbStatus
+                        campusMessage = "\"$dbMessage\""
+                        campusTime = "Now"
+
+                        tempCampusStatus = dbStatus
+                        tempCampusNote = dbMessage
+                    }
+                }
+
+        onDispose {
+            statusListener.remove()
+        }
+    }
+
     AdminSafetyPageUI(
         adminName = adminName,
-
         advisoryHeadline = advisoryHeadline,
         advisoryBody = advisoryBody,
         advisoryTime = advisoryTime,
-
         campusUpdateStatus = campusStatus,
         campusUpdateMessage = campusMessage,
         campusUpdateTime = campusTime,
-
         onClockClick = onGoToCheckInPage,
-
         onUpdateAdvisory = {
             tempAdvisory = advisoryBody
             showAdvisoryDialog = true
         },
-
         onEditCampusUpdate = {
             tempCampusStatus = campusStatus
             tempCampusNote = campusMessage.trim('"')
             showCampusDialog = true
         },
-
         modifier = Modifier,
         navController = navController
     )
 
-    // ✅ Advisory popup is now called from Admin.PopUps
     AdminAdvisoryDialog(
         show = showAdvisoryDialog,
         tempAdvisory = tempAdvisory,
         onTempAdvisoryChange = { tempAdvisory = it },
         onUpdate = {
-            advisoryBody = tempAdvisory.trim()
-            advisoryTime = "Now • Ongoing"
-            showAdvisoryDialog = false
+            val updatedMessage = tempAdvisory.trim()
+
+            db.collection("campus_updates")
+                .document("advisory")
+                .set(
+                    hashMapOf(
+                        "message" to updatedMessage,
+                        "updatedBy" to adminName,
+                        "updatedAt" to System.currentTimeMillis(),
+                        "status" to "ACTIVE"
+                    )
+                )
+                .addOnSuccessListener {
+                    advisoryBody = updatedMessage
+                    advisoryTime = "Now • Ongoing"
+                    showAdvisoryDialog = false
+                }
+                .addOnFailureListener {
+                    println("Failed to save advisory: ${it.message}")
+                }
         },
         onDismiss = { showAdvisoryDialog = false }
     )
 
-    // ✅ Campus Update popup is now called from Admin.PopUps
     AdminCampusStatusDialog(
         show = showCampusDialog,
-
         statusOptions = statusOptions,
-
         statusExpanded = statusExpanded,
         onStatusExpandedChange = { statusExpanded = it },
-
         tempCampusStatus = tempCampusStatus,
         onTempCampusStatusChange = { tempCampusStatus = it },
-
         tempCampusNote = tempCampusNote,
         onTempCampusNoteChange = { tempCampusNote = it },
-
         onUpdate = {
-            campusStatus = tempCampusStatus
-            campusMessage = "\"${tempCampusNote.trim()}\""
-            campusTime = "Now"
-            showCampusDialog = false
+            val updatedStatus = tempCampusStatus
+            val updatedMessage = tempCampusNote.trim()
+
+            db.collection("campus_updates")
+                .document("status")
+                .set(
+                    hashMapOf(
+                        "status" to updatedStatus,
+                        "message" to updatedMessage,
+                        "updatedBy" to adminName,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+                )
+                .addOnSuccessListener {
+                    campusStatus = updatedStatus
+                    campusMessage = "\"$updatedMessage\""
+                    campusTime = "Now"
+                    showCampusDialog = false
+                }
+                .addOnFailureListener {
+                    println("Failed to save campus update: ${it.message}")
+                }
         },
         onDismiss = { showCampusDialog = false }
     )
@@ -306,7 +373,7 @@ fun AdminSafetyPageUI(
                     .padding(horizontal = 14.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(cardBg)
+                    .background(DarkGrayBlue)
                     .padding(12.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

@@ -55,6 +55,10 @@ import com.example.bantaycampus01.ui.theme.TextOnDark
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.viewmodel.ReportViewModel
 import androidx.compose.runtime.LaunchedEffect
+import com.example.bantaycampus01.model.ReportModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun UserHomePage(
@@ -97,6 +101,8 @@ fun UserHomePage(
     var reportLocation by rememberSaveable { mutableStateOf("") }
     var reportDescription by rememberSaveable { mutableStateOf("") }
     var urgency by rememberSaveable { mutableStateOf(UrgencyLevel.MODERATE) }
+
+    var latestReport by rememberSaveable { mutableStateOf<ReportModel?>(null) }
 
     val statusDotColor = when (campusStatusText.uppercase()) {
         "SAFE", "RESOLVED" -> UserUI.Green
@@ -371,7 +377,29 @@ fun UserHomePage(
                         bg = UserUI.PaleBlueCard,
                         fg = UserUI.DarkBlue,
                         icon = R.drawable.risk,
-                        onClick = { showReportStatus = true }
+                        onClick = {
+                            reportViewModel.fetchLatestUserReport(
+                                onSuccess = { report ->
+                                    if (report == null) {
+                                        Toast.makeText(
+                                            context,
+                                            "No report found.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        latestReport = report
+                                        showReportStatus = true
+                                    }
+                                },
+                                onFailure = {
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to load latest report: ${it.localizedMessage}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            )
+                        }
                     )
                 }
 
@@ -489,11 +517,30 @@ fun UserHomePage(
         // ✅ Report Status popup
         ReportDetailDialog(
             show = showReportStatus,
+            reportIdLabel = "Report ID: ${latestReport?.reportId ?: "N/A"}",
+            statusLabel = latestReport?.status ?: "Unknown",
+            statusColor = when ((latestReport?.status ?: "").uppercase()) {
+                "PENDING" -> Color(0xFFF4B400)
+                "RESPONDING" -> Color(0xFFFF9800)
+                "RESOLVED" -> Color(0xFF29C65E)
+                else -> Color.Gray
+            },
+            category = "🚨 ${latestReport?.incidentType ?: "N/A"}",
+            dateTime = latestReport?.createdAt?.let {
+                SimpleDateFormat("MMM d, yyyy - h:mm a", Locale.getDefault()).format(Date(it))
+            } ?: "N/A",
+            location = latestReport?.location ?: "N/A",
+            description = latestReport?.description ?: "No description provided.",
+            hasAttachment = false,
+            onViewAttachment = { },
             onMarkSafe = {
                 onReportStatusClick()
             },
-            onShowMarkedSafe = { showMarkedSafeDialog = true }, // ✅ SHOW THANK-YOU
-            onDismiss = { showReportStatus = false }             // ✅ CLOSE REPORT DETAIL
+            onShowMarkedSafe = { showMarkedSafeDialog = true },
+            onDismiss = {
+                showReportStatus = false
+                latestReport = null
+            }
         )
 
         // ✅ Thank-you popup (shows after MARK SAFE)

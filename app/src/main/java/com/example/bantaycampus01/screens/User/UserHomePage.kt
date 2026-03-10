@@ -1,5 +1,6 @@
 package com.example.bantaycampus01.screens.User
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -50,6 +52,8 @@ import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportSentDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.SendReportDialog
 import com.example.bantaycampus01.screens.User.Menu.PopUps.UrgencyLevel
 import com.example.bantaycampus01.ui.theme.TextOnDark
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bantaycampus01.viewmodel.ReportViewModel
 
 @Composable
 fun UserHomePage(
@@ -69,6 +73,7 @@ fun UserHomePage(
 ) {
 
     val screenScroll = rememberScrollState()
+    val context = LocalContext.current
 
     var showSendReport by rememberSaveable { mutableStateOf(false) }
     var showReportSent by rememberSaveable { mutableStateOf(false) }
@@ -98,6 +103,8 @@ fun UserHomePage(
         "RESTRICTED" -> Color(0xFFE53935)
         else -> UserUI.Green
     }
+
+    val reportViewModel: ReportViewModel = viewModel()
 
     Box(
         modifier = Modifier
@@ -421,9 +428,30 @@ fun UserHomePage(
             onUrgencyChange = { urgency = it },
             onUploadClick = { },
             onSubmit = {
-                onSendReportClick()
-                showSendReport = false
-                showReportSent = true
+
+                reportViewModel.submitReport(
+                    incidentType = selectedIncident,
+                    location = reportLocation,
+                    description = reportDescription,
+                    urgency = urgency.label,
+
+                    onSuccess = {
+
+                        showSendReport = false
+                        showReportSent = true
+
+                    },
+
+                    onFailure = {
+
+                        Toast.makeText(
+                            context,
+                            "Failed to send report",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                    }
+                )
             },
             onDismiss = { showSendReport = false }
         )

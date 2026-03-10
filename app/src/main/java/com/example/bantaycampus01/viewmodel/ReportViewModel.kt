@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.example.bantaycampus01.model.ReportModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 class ReportViewModel : ViewModel() {
 
@@ -19,7 +20,12 @@ class ReportViewModel : ViewModel() {
         onFailure: (Exception) -> Unit
     ) {
 
-        val user = auth.currentUser ?: return
+        val user = auth.currentUser
+
+        if (user == null) {
+            onFailure(Exception("User is not logged in."))
+            return
+        }
 
         val reportRef = db.collection("reports").document()
 
@@ -141,6 +147,71 @@ class ReportViewModel : ViewModel() {
             diff < hour -> "Last check-in ${diff / minute} minute(s) ago"
             diff < day -> "Last check-in ${diff / hour} hour(s) ago"
             else -> "Last check-in more than 24 hours ago"
+        }
+    }
+
+    fun fetchUserReports(
+        onSuccess: (List<ReportModel>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val currentUser = auth.currentUser
+
+        if (currentUser == null) {
+            onFailure(Exception("User is not logged in."))
+            return
+        }
+
+        android.util.Log.d("ReportDebug", "Current UID: ${currentUser.uid}")
+
+        db.collection("reports")
+            .get()
+            .addOnSuccessListener { result ->
+                for (document in result.documents) {
+                    android.util.Log.d(
+                        "ReportDebug",
+                        "Doc ID=${document.id}, userId=${document.getString("userId")}, incidentType=${document.getString("incidentType")}"
+                    )
+                }
+
+                val reports = result.documents.mapNotNull { document ->
+                    document.toObject(ReportModel::class.java)
+                }.filter { report ->
+                    report.userId == currentUser.uid
+                }
+
+                android.util.Log.d("ReportDebug", "Matched reports count: ${reports.size}")
+                onSuccess(reports)
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("ReportDebug", "fetchUserReports failed", e)
+                onFailure(e)
+            }
+    }
+
+    fun getTimeAgo(createdAt: Long): String {
+        val now = System.currentTimeMillis()
+        val diff = now - createdAt
+
+        val minute = 60 * 1000L
+        val hour = 60 * minute
+        val day = 24 * hour
+        val week = 7 * day
+
+        return when {
+            diff < minute -> "Just now"
+            diff < hour -> "${diff / minute} minute(s) ago"
+            diff < day -> "${diff / hour} hour(s) ago"
+            diff < week -> "${diff / day} day(s) ago"
+            else -> "${diff / week} week(s) ago"
+        }
+    }
+
+    fun getReadableStatus(status: String): String {
+        return when (status.uppercase()) {
+            "PENDING" -> "Status: Pending 🟠"
+            "RESPONDING" -> "Status: Responding 🟡"
+            "RESOLVED" -> "Status: Resolved 🟢"
+            else -> "Status: $status"
         }
     }
 }

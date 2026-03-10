@@ -45,12 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.model.CampusRiskLevel
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.screens.Admin.PopUps.AdminAdvisoryDialog
 import com.example.bantaycampus01.screens.Admin.PopUps.AdminCampusStatusDialog
-import com.example.bantaycampus01.screens.Admin.PopUps.AdminRiskControlDialog
 import com.example.bantaycampus01.screens.Admin.PopUps.CAMPUS_STATUS_OPTIONS
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.PopUpButton
@@ -111,18 +109,6 @@ fun AdminHomePage(
         "RESOLVED" -> Color(0xFF29C65E)
         else -> Color(0xFF29C65E)
     }
-
-    // Risk control state
-    var showRiskControlDialog by remember { mutableStateOf(false) }
-
-    var currentRiskLevel by remember {
-        mutableStateOf(if (campusRiskSafe) CampusRiskLevel.SAFE else CampusRiskLevel.HIGH)
-    }
-
-    var tempRiskLevel by remember { mutableStateOf(currentRiskLevel) }
-    var riskNote by remember { mutableStateOf("") }
-    var tempRiskNote by remember { mutableStateOf(riskNote) }
-    var riskExpanded by remember { mutableStateOf(false) }
 
     // Load advisory from Firestore
     DisposableEffect(Unit) {
@@ -275,9 +261,17 @@ fun AdminHomePage(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
+                val campusRiskColor = when (safetyStatusState.uppercase()) {
+                    "SAFE" -> Color(0xFF29C65E)
+                    "CAUTION" -> Color(0xFFF4B400)
+                    "RESTRICTED" -> Color(0xFFE53935)
+                    "RESOLVED" -> Color(0xFF29C65E)
+                    else -> Color(0xFF29C65E)
+                }
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Current Campus Status: ${currentRiskLevel.label}",
+                        text = "Current Campus Status: $safetyStatusState",
                         fontSize = 14.sp,
                         color = TextOnDark
                     )
@@ -288,7 +282,7 @@ fun AdminHomePage(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(currentRiskLevel.dotColor)
+                            .background(campusRiskColor)
                     )
                 }
 
@@ -432,9 +426,9 @@ fun AdminHomePage(
                         container = Color(0xFFC8D6F2),
                         content = TextOnWhite,
                         onClick = {
-                            tempRiskLevel = currentRiskLevel
-                            tempRiskNote = riskNote
-                            showRiskControlDialog = true
+                            tempCampusStatus = selectedCampusStatus
+                            tempCampusNote = safetyMessageState
+                            showCampusStatusDialog = true
                         }
                     )
                 }
@@ -571,23 +565,6 @@ fun AdminHomePage(
                     }
             },
             onDismiss = { showCampusStatusDialog = false }
-        )
-
-        AdminRiskControlDialog(
-            show = showRiskControlDialog,
-            riskExpanded = riskExpanded,
-            onRiskExpandedChange = { riskExpanded = it },
-            tempRiskLevel = tempRiskLevel,
-            onTempRiskLevelChange = { tempRiskLevel = it },
-            tempRiskNote = tempRiskNote,
-            onTempRiskNoteChange = { tempRiskNote = it },
-            onUpdate = {
-                currentRiskLevel = tempRiskLevel
-                riskNote = tempRiskNote
-                showRiskControlDialog = false
-                onRiskControlClick()
-            },
-            onDismiss = { showRiskControlDialog = false }
         )
     }
 }

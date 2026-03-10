@@ -214,4 +214,31 @@ class ReportViewModel : ViewModel() {
             else -> "Status: $status"
         }
     }
+
+    fun fetchLatestUserReport(
+        onSuccess: (ReportModel?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val currentUser = auth.currentUser
+
+        if (currentUser == null) {
+            onFailure(Exception("User is not logged in."))
+            return
+        }
+
+        db.collection("reports")
+            .whereEqualTo("userId", currentUser.uid)
+            .get()
+            .addOnSuccessListener { result ->
+                val latestReport = result.documents
+                    .mapNotNull { it.toObject(ReportModel::class.java) }
+                    .maxByOrNull { it.createdAt }
+
+                onSuccess(latestReport)
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("ReportViewModel", "fetchLatestUserReport failed", e)
+                onFailure(e)
+            }
+    }
 }

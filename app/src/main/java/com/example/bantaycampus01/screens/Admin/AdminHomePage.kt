@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,9 +48,19 @@ import com.example.bantaycampus01.R
 import com.example.bantaycampus01.model.CampusRiskLevel
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
-import com.example.bantaycampus01.ui.theme.*
-import com.example.bantaycampus01.screens.Admin.PopUps.*
+import com.example.bantaycampus01.screens.Admin.PopUps.AdminAdvisoryDialog
+import com.example.bantaycampus01.screens.Admin.PopUps.AdminCampusStatusDialog
+import com.example.bantaycampus01.screens.Admin.PopUps.AdminRiskControlDialog
 import com.example.bantaycampus01.screens.Admin.PopUps.CAMPUS_STATUS_OPTIONS
+import com.example.bantaycampus01.ui.theme.DarkGrayBlue
+import com.example.bantaycampus01.ui.theme.PopUpButton
+import com.example.bantaycampus01.ui.theme.SubTextLabel
+import com.example.bantaycampus01.ui.theme.TextBoxBg
+import com.example.bantaycampus01.ui.theme.TextOnDark
+import com.example.bantaycampus01.ui.theme.TextOnWhite
+import com.example.bantaycampus01.ui.theme.White
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 @Composable
 fun AdminHomePage(
@@ -73,6 +84,7 @@ fun AdminHomePage(
 ) {
     val header = DarkGrayBlue
     val screenScroll = rememberScrollState()
+    val db = remember { FirebaseFirestore.getInstance() }
 
     // Advisory state
     var advisory by remember { mutableStateOf(advisoryText) }
@@ -112,6 +124,55 @@ fun AdminHomePage(
     var tempRiskNote by remember { mutableStateOf(riskNote) }
     var riskExpanded by remember { mutableStateOf(false) }
 
+    // Load advisory from Firestore
+    DisposableEffect(Unit) {
+        val advisoryListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("advisory")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        advisory = snapshot.getString("message") ?: advisoryText
+                    } else {
+                        advisory = advisoryText
+                    }
+                }
+
+        onDispose {
+            advisoryListener.remove()
+        }
+    }
+
+    // Load safety update from Firestore
+    DisposableEffect(Unit) {
+        val statusListener: ListenerRegistration =
+            db.collection("campus_updates")
+                .document("status")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) return@addSnapshotListener
+
+                    if (snapshot != null && snapshot.exists()) {
+                        val dbStatus = snapshot.getString("status") ?: safetyStatus
+                        val dbMessage = snapshot.getString("message") ?: safetyMessage
+
+                        safetyStatusState = dbStatus
+                        safetyMessageState = dbMessage
+
+                        if (statusOptions.contains(dbStatus)) {
+                            selectedCampusStatus = dbStatus
+                        }
+                    } else {
+                        safetyStatusState = safetyStatus
+                        safetyMessageState = safetyMessage
+                    }
+                }
+
+        onDispose {
+            statusListener.remove()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -120,7 +181,7 @@ fun AdminHomePage(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp) // keeps navbar visible
+                .padding(bottom = 80.dp)
                 .verticalScroll(screenScroll)
         ) {
             AdminHeader()
@@ -267,7 +328,7 @@ fun AdminHomePage(
                         Button(
                             onClick = {
                                 tempCampusStatus = selectedCampusStatus
-                                tempCampusNote = campusNote
+                                tempCampusNote = safetyMessageState
                                 showCampusStatusDialog = true
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = header),
@@ -447,14 +508,30 @@ fun AdminHomePage(
             )
         }
 
-        // ✅ POPUPS (now from separate files)
         AdminAdvisoryDialog(
             show = showAdvisoryDialog,
             tempAdvisory = tempAdvisory,
             onTempAdvisoryChange = { tempAdvisory = it },
             onUpdate = {
-                advisory = tempAdvisory.trim()
-                showAdvisoryDialog = false
+                val updatedMessage = tempAdvisory.trim()
+
+                db.collection("campus_updates")
+                    .document("advisory")
+                    .set(
+                        hashMapOf(
+                            "message" to updatedMessage,
+                            "updatedBy" to adminName,
+                            "updatedAt" to System.currentTimeMillis(),
+                            "status" to "ACTIVE"
+                        )
+                    )
+                    .addOnSuccessListener {
+                        advisory = updatedMessage
+                        showAdvisoryDialog = false
+                    }
+                    .addOnFailureListener {
+                        println("Failed to save advisory: ${it.message}")
+                    }
             },
             onDismiss = { showAdvisoryDialog = false }
         )
@@ -469,14 +546,29 @@ fun AdminHomePage(
             tempCampusNote = tempCampusNote,
             onTempCampusNoteChange = { tempCampusNote = it },
             onUpdate = {
-                selectedCampusStatus = tempCampusStatus
-                campusNote = tempCampusNote
+                val updatedStatus = tempCampusStatus
+                val updatedMessage = tempCampusNote.trim()
 
-                safetyStatusState = tempCampusStatus
-                if (campusNote.isNotBlank()) {
-                    safetyMessageState = campusNote.trim()
-                }
-                showCampusStatusDialog = false
+                db.collection("campus_updates")
+                    .document("status")
+                    .set(
+                        hashMapOf(
+                            "status" to updatedStatus,
+                            "message" to updatedMessage,
+                            "updatedBy" to adminName,
+                            "updatedAt" to System.currentTimeMillis()
+                        )
+                    )
+                    .addOnSuccessListener {
+                        selectedCampusStatus = updatedStatus
+                        campusNote = updatedMessage
+                        safetyStatusState = updatedStatus
+                        safetyMessageState = updatedMessage
+                        showCampusStatusDialog = false
+                    }
+                    .addOnFailureListener {
+                        println("Failed to save safety update: ${it.message}")
+                    }
             },
             onDismiss = { showCampusStatusDialog = false }
         )

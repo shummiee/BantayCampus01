@@ -15,26 +15,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.screens.User.PopUps.UserSosConfirmDialog
-import com.example.bantaycampus01.screens.User.PopUps.UserSosSentDialog
-import com.example.bantaycampus01.viewmodel.AuthViewModel
+import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 
 @Composable
 fun UserNavBar(
     modifier: Modifier,
     navController: NavController
 ) {
-
     var showConfirm by rememberSaveable { mutableStateOf(false) }
-    var showSent by rememberSaveable { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(90.dp)
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -43,7 +38,6 @@ fun UserNavBar(
                 .background(DarkGrayBlue),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             BottomNavSlot(
                 res = R.drawable.home,
                 contentDescription = "Home",
@@ -75,7 +69,6 @@ fun UserNavBar(
             )
         }
 
-        // SOS BUTTON
         Box(
             modifier = Modifier
                 .size(76.dp)
@@ -90,24 +83,15 @@ fun UserNavBar(
         ) {
             Image(
                 painter = painterResource(R.drawable.sos),
-                contentDescription = "SOS Pop-up",
+                contentDescription = "SOS Button",
                 modifier = Modifier.size(44.dp)
             )
         }
 
-        // CONFIRM SOS DIALOG
         UserSosConfirmDialog(
             show = showConfirm,
             onDismiss = {
                 showConfirm = false
-            }
-        )
-
-        // SENT SOS DIALOG
-        UserSosSentDialog(
-            show = showSent,
-            onDismiss = {
-                showSent = false
             }
         )
     }

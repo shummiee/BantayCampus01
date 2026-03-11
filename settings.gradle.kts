@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "BantayCampus01"
 include(":app")
+include(":BantayCampus01")

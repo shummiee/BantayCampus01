@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import com.example.bantaycampus01.model.UserModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
@@ -83,7 +85,12 @@ class AuthViewModel : ViewModel() {
                         }
 
                 }else{
-                    onResult(false,it.exception?.localizedMessage)
+                    val errorMsg = when(it.exception) {
+                        is FirebaseAuthInvalidCredentialsException -> "Invalid credentials"
+                        is FirebaseAuthUserCollisionException -> "Email already exists"
+                        else -> it.exception?.localizedMessage ?: "Registration failed"
+                    }
+                    onResult(false, errorMsg)
                 }
             }
     }

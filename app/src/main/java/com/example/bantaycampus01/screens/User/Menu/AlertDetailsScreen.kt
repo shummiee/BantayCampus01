@@ -20,13 +20,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,35 +39,56 @@ import com.example.bantaycampus01.partials.user.UserUI
 fun UserAlertDetailsScreen(
     modifier: Modifier,
     navController: NavController,
-
     userName: String = "User",
-
-    reportId: String = "Report ID: #BC-2026-0145",
-    statusText: String = "RESOLVED",
-    categoryText: String = "⚡ Power Outage",
-    dateTimeText: String = "Jan 27, 2026 - 8:10 AM",
-    locationText: String = "Academic Building - 2nd Floor",
-    descriptionText: String = "Lights are out in several classrooms. Please take caution while moving around the area.",
-    reportedByText: String = "Campus Security",
-    activityLogs: List<String> = listOf(
-        "8:10 AM – Alert sent",
-        "8:12 AM – Acknowledged by Security",
-        "8:20 AM – Electrician dispatched",
-        "9:40 AM – Issue resolved"
-    ),
-
     onReturn: () -> Unit = { navController.popBackStack() },
     onViewImage: () -> Unit = {}
 ) {
+    val savedStateHandle = navController.previousBackStackEntry?.savedStateHandle
+
+    val reportId = remember {
+        savedStateHandle?.get<String>("alert_report_id") ?: "Report ID: N/A"
+    }
+
+    val statusText = remember {
+        savedStateHandle?.get<String>("alert_status_text") ?: "Unknown"
+    }
+
+    val categoryText = remember {
+        savedStateHandle?.get<String>("alert_category_text") ?: "⚠️ Alert"
+    }
+
+    val dateTimeText = remember {
+        savedStateHandle?.get<String>("alert_date_time_text") ?: "Unknown time"
+    }
+
+    val locationText = remember {
+        savedStateHandle?.get<String>("alert_location_text") ?: "Unknown location"
+    }
+
+    val descriptionText = remember {
+        savedStateHandle?.get<String>("alert_description_text")
+            ?: "No description provided."
+    }
+
+    val reportedByText = remember {
+        savedStateHandle?.get<String>("alert_reported_by_text") ?: "Unknown reporter"
+    }
+
+    val activityLogs = remember {
+        savedStateHandle?.get<ArrayList<String>>("alert_activity_logs")?.toList()
+            ?: listOf("No activity logs available.")
+    }
+
     val border = Color(0xFF6F7A8E)
     val panelBg = Color(0xFFCAD6EE)
     val header = UserUI.DarkBlue
 
     val statusDot = when (statusText.uppercase()) {
         "SAFE", "RESOLVED" -> UserUI.Green
-        "CAUTION", "ACKNOWLEDGED" -> Color(0xFFF4B400)
+        "CAUTION", "ACKNOWLEDGED", "PENDING" -> Color(0xFFF4B400)
+        "RESPONDING" -> Color(0xFFFF9800)
         "RESTRICTED", "CRITICAL" -> Color(0xFFE53935)
-        else -> UserUI.Green
+        else -> Color.Gray
     }
 
     Box(

@@ -1,5 +1,6 @@
 package com.example.bantaycampus01.screens.Admin
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,14 +27,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,13 +44,16 @@ import com.example.bantaycampus01.model.ReportModel
 import com.example.bantaycampus01.model.SosAlert
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
+import com.example.bantaycampus01.screens.Admin.PopUps.AdminDispatchDialog
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 import com.example.bantaycampus01.ui.theme.TextOnWhite
 import com.example.bantaycampus01.ui.theme.White
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
 data class AdminIncomingAlert(
+    val docId: String = "",
     val alertId: String = "",
     val source: String = "", // REPORT or SOS
     val title: String = "",
@@ -61,7 +65,9 @@ data class AdminIncomingAlert(
     val status: String = "PENDING",
     val createdAt: Long = 0L,
     val rawTimeText: String = "",
-    val collectionName: String = ""
+    val collectionName: String = "",
+    val dispatchedTeams: List<String> = emptyList(),
+    val dispatchNote: String = ""
 )
 
 @Composable
@@ -71,6 +77,7 @@ fun AdminAlertPage(
     adminName: String = "Admin"
 ) {
     val db = remember { FirebaseFirestore.getInstance() }
+    val context = LocalContext.current
 
     val alerts = remember { mutableStateListOf<AdminIncomingAlert>() }
     var reportsCache by remember { mutableStateOf<List<AdminIncomingAlert>>(emptyList()) }
@@ -78,6 +85,41 @@ fun AdminAlertPage(
 
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var showDispatchDialog by remember { mutableStateOf(false) }
+    var selectedAlert by remember { mutableStateOf<AdminIncomingAlert?>(null) }
+
+    var guardA by remember { mutableStateOf(false) }
+    var guardB by remember { mutableStateOf(false) }
+    var guardC by remember { mutableStateOf(false) }
+    var guardD by remember { mutableStateOf(false) }
+    var guardE by remember { mutableStateOf(false) }
+    var guardF by remember { mutableStateOf(false) }
+    var medicalUnit by remember { mutableStateOf(false) }
+    var dispatchNote by remember { mutableStateOf("") }
+
+    fun resetDispatchForm() {
+        guardA = false
+        guardB = false
+        guardC = false
+        guardD = false
+        guardE = false
+        guardF = false
+        medicalUnit = false
+        dispatchNote = ""
+    }
+
+    fun getSelectedTeams(): List<String> {
+        val teams = mutableListOf<String>()
+        if (guardA) teams.add("Guard A")
+        if (guardB) teams.add("Guard B")
+        if (guardC) teams.add("Guard C")
+        if (guardD) teams.add("Guard D")
+        if (guardE) teams.add("Guard E")
+        if (guardF) teams.add("Guard F")
+        if (medicalUnit) teams.add("Medical Unit")
+        return teams
+    }
 
     fun mergeAlerts() {
         val combined = (reportsCache + sosCache)
@@ -115,6 +157,7 @@ fun AdminAlertPage(
                         val report = doc.toObject(ReportModel::class.java) ?: return@mapNotNull null
 
                         AdminIncomingAlert(
+                            docId = doc.id,
                             alertId = if (report.reportId.isNotBlank()) report.reportId else doc.id,
                             source = "REPORT",
                             title = if (report.incidentType.isNotBlank()) report.incidentType else "User Report",
@@ -126,7 +169,9 @@ fun AdminAlertPage(
                             status = if (report.status.isNotBlank()) report.status else "PENDING",
                             createdAt = report.createdAt,
                             rawTimeText = "",
-                            collectionName = "reports"
+                            collectionName = "reports",
+                            dispatchedTeams = doc.get("dispatchedTeams") as? List<String> ?: emptyList(),
+                            dispatchNote = doc.getString("dispatchNote") ?: ""
                         )
                     } ?: emptyList()
 
@@ -153,18 +198,21 @@ fun AdminAlertPage(
                         val sos = doc.toObject(SosAlert::class.java) ?: return@mapNotNull null
 
                         AdminIncomingAlert(
+                            docId = doc.id,
                             alertId = if (sos.reportId.isNotBlank()) sos.reportId else doc.id,
                             source = "SOS",
                             title = "SOS Emergency",
                             userName = if (sos.userName.isNotBlank()) sos.userName else "Unknown User",
                             idNumber = if (sos.idNumber.isNotBlank()) sos.idNumber else "No ID number",
-                            location = "Location not provided",
+                            location = doc.getString("location") ?: "Location not provided",
                             description = if (sos.message.isNotBlank()) sos.message else "SOS Emergency",
                             urgency = "HIGH",
                             status = if (sos.status.isNotBlank()) sos.status else "PENDING",
-                            createdAt = System.currentTimeMillis(),
+                            createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
                             rawTimeText = sos.timestamp,
-                            collectionName = "sos_alerts"
+                            collectionName = "sos_alerts",
+                            dispatchedTeams = doc.get("dispatchedTeams") as? List<String> ?: emptyList(),
+                            dispatchNote = doc.getString("dispatchNote") ?: ""
                         )
                     } ?: emptyList()
 
@@ -228,30 +276,27 @@ fun AdminAlertPage(
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(alerts, key = { it.collectionName + "_" + it.alertId }) { alert ->
+                    items(alerts, key = { it.collectionName + "_" + it.docId }) { alert ->
                         AlertCard(
                             alert = alert,
                             onAcknowledge = {
                                 updateAlertStatus(
                                     db = db,
                                     collectionName = alert.collectionName,
-                                    alertId = alert.alertId,
+                                    docId = alert.docId,
                                     newStatus = "ACKNOWLEDGED"
                                 )
                             },
                             onRespond = {
-                                updateAlertStatus(
-                                    db = db,
-                                    collectionName = alert.collectionName,
-                                    alertId = alert.alertId,
-                                    newStatus = "RESPONDING"
-                                )
+                                selectedAlert = alert
+                                resetDispatchForm()
+                                showDispatchDialog = true
                             },
                             onResolve = {
                                 updateAlertStatus(
                                     db = db,
                                     collectionName = alert.collectionName,
-                                    alertId = alert.alertId,
+                                    docId = alert.docId,
                                     newStatus = "RESOLVED"
                                 )
                             }
@@ -272,17 +317,125 @@ fun AdminAlertPage(
             )
         }
     }
+
+    AdminDispatchDialog(
+        show = showDispatchDialog,
+        alertIdLabel = selectedAlert?.alertId ?: "N/A",
+
+        guardA = guardA,
+        onGuardAChange = { guardA = it },
+
+        guardB = guardB,
+        onGuardBChange = { guardB = it },
+
+        guardC = guardC,
+        onGuardCChange = { guardC = it },
+
+        guardD = guardD,
+        onGuardDChange = { guardD = it },
+
+        guardE = guardE,
+        onGuardEChange = { guardE = it },
+
+        guardF = guardF,
+        onGuardFChange = { guardF = it },
+
+        medicalUnit = medicalUnit,
+        onMedicalUnitChange = { medicalUnit = it },
+
+        dispatchNote = dispatchNote,
+        onDispatchNoteChange = { dispatchNote = it },
+
+        onDispatch = {
+            val alert = selectedAlert ?: return@AdminDispatchDialog
+            val selectedTeams = getSelectedTeams()
+
+            if (selectedTeams.isEmpty()) {
+                Toast.makeText(
+                    context,
+                    "Please select at least one response team.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@AdminDispatchDialog
+            }
+
+            updateAlertDispatch(
+                db = db,
+                collectionName = alert.collectionName,
+                docId = alert.docId,
+                teams = selectedTeams,
+                note = dispatchNote,
+                adminName = adminName,
+                onSuccess = {
+                    Toast.makeText(
+                        context,
+                        "Response team dispatched successfully.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    showDispatchDialog = false
+                    selectedAlert = null
+                    resetDispatchForm()
+                },
+                onFailure = { e ->
+                    Toast.makeText(
+                        context,
+                        "Failed to dispatch team: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            )
+        },
+        onDismiss = {
+            showDispatchDialog = false
+            selectedAlert = null
+            resetDispatchForm()
+        }
+    )
 }
 
 private fun updateAlertStatus(
     db: FirebaseFirestore,
     collectionName: String,
-    alertId: String,
+    docId: String,
     newStatus: String
 ) {
     db.collection(collectionName)
-        .document(alertId)
-        .update("status", newStatus)
+        .document(docId)
+        .update(
+            mapOf(
+                "status" to newStatus,
+                "updatedAt" to System.currentTimeMillis()
+            )
+        )
+}
+
+private fun updateAlertDispatch(
+    db: FirebaseFirestore,
+    collectionName: String,
+    docId: String,
+    teams: List<String>,
+    note: String,
+    adminName: String,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    db.collection(collectionName)
+        .document(docId)
+        .update(
+            mapOf(
+                "status" to "RESPONDING",
+                "dispatchedTeams" to teams,
+                "dispatchNote" to note,
+                "dispatchedBy" to adminName,
+                "dispatchedAt" to System.currentTimeMillis(),
+                "updatedAt" to System.currentTimeMillis(),
+                "activityLogs" to FieldValue.arrayUnion(
+                    "Response team dispatched: ${teams.joinToString(", ")}"
+                )
+            )
+        )
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { onFailure(it) }
 }
 
 @Composable
@@ -381,6 +534,25 @@ private fun AlertCard(
                         color = statusColor(alert.status),
                         shape = CircleShape
                     )
+            )
+        }
+
+        if (alert.dispatchedTeams.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Team Sent: ${alert.dispatchedTeams.joinToString(", ")}",
+                fontSize = 13.sp,
+                color = TextOnWhite,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        if (alert.dispatchNote.isNotBlank()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Dispatch Note: ${alert.dispatchNote}",
+                fontSize = 13.sp,
+                color = TextOnWhite
             )
         }
 

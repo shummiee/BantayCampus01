@@ -3,6 +3,7 @@ package com.example.bantaycampus01.viewmodel
 import androidx.lifecycle.ViewModel
 import com.example.bantaycampus01.model.UserModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
@@ -138,5 +139,39 @@ class AuthViewModel : ViewModel() {
         } else {
             onResult(null, null, null, null, null, null)
         }
+    }
+    fun changePassword(
+        currentPassword: String,
+        newPassword: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        val user = auth.currentUser
+
+        if (user == null) {
+            onResult(false, "No logged-in user found.")
+            return
+        }
+
+        val email = user.email
+        if (email.isNullOrBlank()) {
+            onResult(false, "User email not found.")
+            return
+        }
+
+        val credential = EmailAuthProvider.getCredential(email, currentPassword)
+
+        user.reauthenticate(credential)
+            .addOnSuccessListener {
+                user.updatePassword(newPassword)
+                    .addOnSuccessListener {
+                        onResult(true, "Password updated successfully.")
+                    }
+                    .addOnFailureListener { e ->
+                        onResult(false, e.localizedMessage ?: "Failed to update password.")
+                    }
+            }
+            .addOnFailureListener {
+                onResult(false, "Current password is incorrect.")
+            }
     }
 }

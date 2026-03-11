@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,14 +21,15 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserTopBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ChangePasswordDialog
 import com.example.bantaycampus01.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun AccountInfoScreen(
@@ -42,14 +45,18 @@ fun AccountInfoScreen(
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var isChangingPassword by remember { mutableStateOf(false) }
 
-    // User info states
-    var username by remember { mutableStateOf("") }
-    var userRole by remember { mutableStateOf("") }
-    var studentId by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var contactNumber by remember { mutableStateOf("") }
-    var department by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("Loading...") }
+    var userRole by remember { mutableStateOf("Loading...") }
+    var studentId by remember { mutableStateOf("N/A") }
+    var email by remember { mutableStateOf("N/A") }
+    var contactNumber by remember { mutableStateOf("N/A") }
+    var department by remember { mutableStateOf("N/A") }
+    var yearLevel by remember { mutableStateOf("N/A") }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         authViewModel.getUserProfile { name, userEmail, userContactNumber, idNumber, userDepartment, role ->
@@ -70,6 +77,9 @@ fun AccountInfoScreen(
                 showReturn = true,
                 onReturn = { navController.popBackStack() }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
     ) { padding ->
         Box(
@@ -141,7 +151,7 @@ fun AccountInfoScreen(
                         .border(1.dp, tableBorder, RoundedCornerShape(2.dp))
                 ) {
                     InfoRowTable(
-                        left = "ID Number",
+                        left = "Student ID",
                         right = studentId,
                         showEdit = false,
                         dividerColor = tableDivider
@@ -159,6 +169,11 @@ fun AccountInfoScreen(
                     InfoRowTable(
                         left = "Department",
                         right = department,
+                        dividerColor = tableDivider
+                    )
+                    InfoRowTable(
+                        left = "Year Level",
+                        right = yearLevel,
                         dividerColor = tableDivider
                     )
                     InfoRowTable(
@@ -188,17 +203,63 @@ fun AccountInfoScreen(
             onNewPasswordChange = { newPassword = it },
             confirmPassword = confirmPassword,
             onConfirmPasswordChange = { confirmPassword = it },
+            isLoading = isChangingPassword,
             onConfirm = {
-                showChangePassword = false
-                currentPassword = ""
-                newPassword = ""
-                confirmPassword = ""
+                when {
+                    currentPassword.isBlank() || newPassword.isBlank() || confirmPassword.isBlank() -> {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Please fill in all password fields.")
+                        }
+                    }
+
+                    newPassword.length < 6 -> {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("New password must be at least 6 characters.")
+                        }
+                    }
+
+                    newPassword != confirmPassword -> {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("New password and confirm password do not match.")
+                        }
+                    }
+
+                    currentPassword == newPassword -> {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("New password must be different from current password.")
+                        }
+                    }
+
+                    else -> {
+                        isChangingPassword = true
+
+                        authViewModel.changePassword(
+                            currentPassword = currentPassword,
+                            newPassword = newPassword
+                        ) { success, message ->
+                            isChangingPassword = false
+
+                            scope.launch {
+                                snackbarHostState.showSnackbar(message ?: if (success) "Password updated." else "Failed to update password.")
+                            }
+
+                            if (success) {
+                                showChangePassword = false
+                                currentPassword = ""
+                                newPassword = ""
+                                confirmPassword = ""
+                            }
+                        }
+                    }
+                }
             },
             onDismiss = {
-                showChangePassword = false
-                currentPassword = ""
-                newPassword = ""
-                confirmPassword = ""
+                if (!isChangingPassword) {
+                    showChangePassword = false
+                    currentPassword = ""
+                    newPassword = ""
+                    confirmPassword = ""
+                }
             }
         )
     }

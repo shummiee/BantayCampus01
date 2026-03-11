@@ -53,7 +53,11 @@ import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel = viewModel()){
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val focusManager = LocalFocusManager.current
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
@@ -66,15 +70,16 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
 
     val context = LocalContext.current
 
-
-    Box(modifier = Modifier
-                    .fillMaxSize()
-                    .background(White)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White)
+    ) {
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable{
+                .clickable {
                     focusManager.clearFocus()
                 }
                 .height(320.dp)
@@ -82,11 +87,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("BantayCampus", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    "BantayCampus",
+                    color = White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
             }
         }
 
-        // Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,6 +112,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
                 fontWeight = FontWeight.Black,
                 color = TextOnWhite
             )
+
             Text(
                 text = "Sign in to continue.",
                 fontSize = 12.sp,
@@ -115,7 +125,10 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             Spacer(modifier = Modifier.height(8.dp))
             SoftField(
                 value = email,
-                onValueChange = { email = it; error = null },
+                onValueChange = {
+                    email = it
+                    error = null
+                },
                 placeholder = "Email",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Email,
@@ -129,7 +142,10 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             Spacer(modifier = Modifier.height(8.dp))
             SoftField(
                 value = password,
-                onValueChange = { password = it; error = null },
+                onValueChange = {
+                    password = it
+                    error = null
+                },
                 placeholder = "Password",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Password,
@@ -168,39 +184,47 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
 
             Button(
                 onClick = {
+                    focusManager.clearFocus()
+
+                    if (email.isBlank() || password.isBlank()) {
+                        error = "Please enter your email and password."
+                        return@Button
+                    }
+
                     isLoading = true
-                    authViewModel.login(email, password) { success, errorMessage, role ->
+                    error = null
+
+                    authViewModel.login(email.trim(), password) { success, errorMessage, role ->
+                        isLoading = false
 
                         if (success) {
-
                             if (role == "ADMIN") {
-
-                                navController.navigate("AdminHomepage_Screen"){
-                                popUpTo("Login_Screen") { inclusive = true }}
-
+                                navController.navigate("AdminHomepage_Screen") {
+                                    popUpTo("Login_Screen") { inclusive = true }
+                                }
                             } else {
-
-                                navController.navigate("UserHomePage_Screen"){
-                                    popUpTo("Login_Screen") { inclusive = true }}
-
+                                navController.navigate("UserHomePage_Screen") {
+                                    popUpTo("Login_Screen") { inclusive = true }
+                                }
                             }
-
                         } else {
-
+                            error = errorMessage ?: "Login failed"
                             AppUtil.showToast(context, errorMessage ?: "Login Failed")
-
                         }
                     }
                 },
                 enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = headerColor)
             ) {
-                Text( if(isLoading) "Logging In" else
-                    "Log in",
+                Text(
+                    text = if (isLoading) "Logging In..." else "Log in",
                     color = TextOnDark,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -211,11 +235,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
 
             Spacer(modifier = Modifier.height(1.dp))
 
-            TextButton(onClick = { navController.navigate("Registration_Screen")}) {
-                Text("Register Here",
+            TextButton(onClick = {
+                navController.navigate("Registration_Screen")
+            }) {
+                Text(
+                    "Register Here",
                     fontSize = 14.sp,
                     color = SubTextLabel,
-                    textDecoration = TextDecoration.Underline)
+                    textDecoration = TextDecoration.Underline
+                )
             }
         }
 
@@ -269,8 +297,16 @@ private fun SoftField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth().height(54.dp),
-        placeholder = { Text(placeholder, fontSize = 13.sp, color = TextBoxPlaceholder) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        placeholder = {
+            Text(
+                placeholder,
+                fontSize = 13.sp,
+                color = TextBoxPlaceholder
+            )
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation = transformation,

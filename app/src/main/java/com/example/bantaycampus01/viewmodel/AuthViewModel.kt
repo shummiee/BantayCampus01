@@ -3,7 +3,11 @@ package com.example.bantaycampus01.viewmodel
 import androidx.lifecycle.ViewModel
 import com.example.bantaycampus01.model.UserModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 
 class AuthViewModel : ViewModel() {
@@ -11,22 +15,57 @@ class AuthViewModel : ViewModel() {
     private val auth = Firebase.auth
     private val firestore = Firebase.firestore
 
-    fun login(email : String,
-              password: String,
-              onResult: (Boolean, String?)-> Unit){
-        auth.signInWithEmailAndPassword(email,password)
-            .addOnCompleteListener {
-                if(it.isSuccessful){
-                    onResult(true,null)
-                }else{
-                    onResult(false,it.exception?.localizedMessage)
+    fun login(
+        email: String,
+        password: String,
+        onResult: (Boolean, String?, String?) -> Unit
+    ) {
+
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+
+                if (task.isSuccessful) {
+
+                    val uid = auth.currentUser?.uid
+
+                    FirebaseFirestore.getInstance()
+                        .collection("users")
+                        .document(uid!!)
+                        .get()
+                        .addOnSuccessListener { document ->
+
+                            val role = document.getString("role")
+
+                            onResult(true, null, role)
+
+                        }
+
+                } else {
+
+                    onResult(false, task.exception?.localizedMessage, null)
+
                 }
             }
+    }
+
+    fun logout(onResult: (Boolean, String?) -> Unit) {
+        try {
+            auth.signOut()
+            onResult(true, null)
+        } catch (e: Exception) {
+            onResult(false, e.localizedMessage)
+        }
     }
 
     fun register(
         email : String,
         name : String,
+        contactNumber : String,
+        idNumber : String,
+        department : String,
+        dob : String,
+        role : String,
+
         password: String,
         onResult: (Boolean, String?)-> Unit){
         auth.createUserWithEmailAndPassword(email,password)
@@ -34,7 +73,7 @@ class AuthViewModel : ViewModel() {
                 if(it.isSuccessful) {
                     var userId = it.result?.user?.uid
 
-                    val userModel = UserModel(name, email, userId!!)
+                    val userModel = UserModel(name, email, contactNumber, idNumber, department, dob, role="USER", userId!!)
                     firestore.collection("users").document(userId)
                         .set(userModel)
                         .addOnCompleteListener { dbTask->
@@ -46,8 +85,100 @@ class AuthViewModel : ViewModel() {
                         }
 
                 }else{
-                    onResult(false,it.exception?.localizedMessage)
+                    val errorMsg = when(it.exception) {
+                        is FirebaseAuthInvalidCredentialsException -> "Invalid credentials"
+                        is FirebaseAuthUserCollisionException -> "Email already exists"
+                        else -> it.exception?.localizedMessage ?: "Registration failed"
+                    }
+                    onResult(false, errorMsg)
                 }
+            }
+    }
+
+    fun getUserName(onResult: (String?) -> Unit) {
+        val uid = auth.currentUser?.uid
+
+        if (uid != null) {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    val fullName = document.getString("name")
+                    val firstName = fullName?.split(" ")?.firstOrNull()  // take first word
+                    onResult(firstName)
+                }
+                .addOnFailureListener {
+                    onResult(null)
+                }
+        } else {
+            onResult(null)
+        }
+    }
+
+    fun getUserProfile(onResult: (String?, String?, String?, String?, String?, String?) -> Unit) {
+
+        val uid = auth.currentUser?.uid
+
+        if (uid != null) {
+
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+
+                    val name = document.getString("name")
+                    val email = document.getString("email")
+                    val contactNumber = document.getString("contactNumber")
+                    val idNumber = document.getString("idNumber")
+                    val department = document.getString("department")
+                    val role = document.getString("role")
+
+
+                    onResult(name,email,contactNumber,idNumber,department, role)
+
+                }
+                .addOnFailureListener {
+                    onResult(null, null, null, null, null, null)
+                }
+
+        } else {
+            onResult(null, null, null, null, null, null)
+        }
+    }
+    fun changePassword(
+        currentPassword: String,
+        newPassword: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        val user = auth.currentUser
+
+        if (user == null) {
+            onResult(false, "No logged-in user found.")
+            return
+        }
+
+        val email = user.email
+        if (email.isNullOrBlank()) {
+            onResult(false, "User email not found.")
+            return
+        }
+
+        val credential = EmailAuthProvider.getCredential(email, currentPassword)
+
+        user.reauthenticate(credential)
+            .addOnSuccessListener {
+                user.updatePassword(newPassword)
+                    .addOnSuccessListener {
+                        onResult(true, "Password updated successfully.")
+                    }
+                    .addOnFailureListener { e ->
+                        onResult(false, e.localizedMessage ?: "Failed to update password.")
+                    }
+            }
+            .addOnFailureListener {
+                onResult(false, "Current password is incorrect.")
             }
     }
 }

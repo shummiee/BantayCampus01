@@ -2,6 +2,7 @@ package com.example.bantaycampus01.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,11 +11,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -34,11 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,19 +52,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.screens.User.MainMenu
-import com.example.bantaycampus01.ui.theme.DarkGrayBlue
-import com.example.bantaycampus01.ui.theme.SubTextLabel
-import com.example.bantaycampus01.ui.theme.TextBoxBg
-import com.example.bantaycampus01.ui.theme.TextBoxPlaceholder
-import com.example.bantaycampus01.ui.theme.TextBoxText
-import com.example.bantaycampus01.ui.theme.TextOnDark
-import com.example.bantaycampus01.ui.theme.TextOnWhite
-import com.example.bantaycampus01.ui.theme.White
+import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, authViewModel: AuthViewModel = viewModel()){
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val focusManager = LocalFocusManager.current
     val headerColor = DarkGrayBlue
     val fieldBg = TextBoxBg
 
@@ -69,28 +72,41 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
-
-    Box(modifier = Modifier.fillMaxSize().background(White)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White)
+    ) {
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable {
+                    focusManager.clearFocus()
+                }
                 .height(320.dp)
                 .background(headerColor),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("BantayCampus", color = White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    "BantayCampus",
+                    color = White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
             }
         }
 
-        // Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .padding(top = 180.dp)
                 .background(White)
+                .verticalScroll(scrollState)
                 .padding(horizontal = 30.dp)
                 .padding(top = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -101,6 +117,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
                 fontWeight = FontWeight.Black,
                 color = TextOnWhite
             )
+
             Text(
                 text = "Sign in to continue.",
                 fontSize = 12.sp,
@@ -113,7 +130,10 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             Spacer(modifier = Modifier.height(8.dp))
             SoftField(
                 value = email,
-                onValueChange = { email = it; error = null },
+                onValueChange = {
+                    email = it
+                    error = null
+                },
                 placeholder = "Email",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Email,
@@ -127,7 +147,10 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
             Spacer(modifier = Modifier.height(8.dp))
             SoftField(
                 value = password,
-                onValueChange = { password = it; error = null },
+                onValueChange = {
+                    password = it
+                    error = null
+                },
                 placeholder = "Password",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Password,
@@ -158,7 +181,8 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
                     text = error!!,
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -166,30 +190,63 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
 
             Button(
                 onClick = {
+                    focusManager.clearFocus()
+
+                    if (email.isBlank() || password.isBlank()) {
+                        error = "Please enter your email and password."
+                        return@Button
+                    }
+
                     isLoading = true
-                    authViewModel.login(email, password){
-                            success,errorMessage->
-                        if(success) {
-                            isLoading = false
-                            navController.navigate("MainMenu_Screen"){
-                                popUpTo("Registration_Screen"){inclusive=true}
+                    error = null
+
+                    authViewModel.login(email.trim(), password) { success, errorMessage, role ->
+                        isLoading = false
+
+                        if (success) {
+                            if (role == "ADMIN") {
+                                navController.navigate("AdminHomepage_Screen") {
+                                    popUpTo("Login_Screen") { inclusive = true }
+                                }
+                                AppUtil.showToast(context, "Login successful!")
+                            } else {
+                                navController.navigate("UserHomePage_Screen") {
+                                    popUpTo("Login_Screen") { inclusive = true }
+                                }
+                                AppUtil.showToast(context, "Login successful!")
+                            }
+                        } else {
+                            val friendlyMessage = when {
+                                errorMessage?.contains("no user record", true) == true ->
+                                    "Account does not exist." //FUNCTIONING BUT NOT READING THIS ERROR PROPERLY
+
+                                errorMessage?.contains("password", true) == true ->
+                                    "Incorrect email or password."
+
+                                errorMessage?.contains("badly formatted", true) == true ||
+                                        errorMessage?.contains("invalid email", true) == true ->
+                                    "Invalid email format."
+
+                                else -> "Login failed. Please try again."
                             }
 
-                        }else{
-                            isLoading = false
-                            AppUtil.showToast(context,errorMessage?:"Something went wrong")
+                            error = friendlyMessage
+                            AppUtil.showToast(context, friendlyMessage)
                         }
                     }
                 },
                 enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth().height(52.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = headerColor)
             ) {
-                Text( if(isLoading) "Logging In" else
-                    "Log in",
+                Text(
+                    text = if (isLoading) "Logging In..." else "Log in",
                     color = TextOnDark,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -200,11 +257,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController, aut
 
             Spacer(modifier = Modifier.height(1.dp))
 
-            TextButton(onClick = { navController.navigate("Registration_Screen")}) {
-                Text("Register Here",
+            TextButton(onClick = {
+                navController.navigate("Registration_Screen")
+            }) {
+                Text(
+                    "Register Here",
                     fontSize = 14.sp,
                     color = SubTextLabel,
-                    textDecoration = TextDecoration.Underline)
+                    textDecoration = TextDecoration.Underline
+                )
             }
         }
 
@@ -258,8 +319,16 @@ private fun SoftField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth().height(54.dp),
-        placeholder = { Text(placeholder, fontSize = 13.sp, color = TextBoxPlaceholder) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp),
+        placeholder = {
+            Text(
+                placeholder,
+                fontSize = 13.sp,
+                color = TextBoxPlaceholder
+            )
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         visualTransformation = transformation,

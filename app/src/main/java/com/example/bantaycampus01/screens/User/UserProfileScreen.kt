@@ -140,13 +140,6 @@ fun UserProfileScreen(
                 text = "EMERGENCY CONTACTS", // (kept as screenshot spelling)
                 onClick = { navController.navigate("SchoolContact_Screen") }
             )
-
-            ProfilePillRow(
-                icon = { Icon(Icons.Filled.Settings, contentDescription = null, tint = Color.White) },
-                text = "NOTIFICATION SETTINGS",
-                onClick = { navController.navigate("NotificationSetting_Screen") }
-            )
-
             // Big spacing before logout (like screenshot)
             Spacer(modifier = Modifier.height(180.dp))
 

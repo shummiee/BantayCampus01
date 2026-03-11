@@ -29,12 +29,10 @@ fun AboutUsScreen(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
-    // colors to match screenshot
-    val cardBg = Color(0xFFE6E6E6)        // light gray
-    val cardBorder = Color(0xFF6F7A8E)    // gray-blue border
+    val cardBg = Color(0xFFE6E6E6)
+    val cardBorder = Color(0xFF6F7A8E)
     val textColor = Color(0xFF22304A)
 
-    // ✅ No bottomBar here; we'll pin UserNavBar like UserProfileScreen
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
@@ -54,7 +52,7 @@ fun AboutUsScreen(
                 modifier = modifier
                     .padding(padding)
                     .fillMaxSize()
-                    .padding(bottom = 80.dp) // ✅ space for UserNavBar
+                    .padding(bottom = 80.dp)
                     .padding(horizontal = 18.dp)
                     .padding(top = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -68,7 +66,6 @@ fun AboutUsScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                // ✅ Gray bordered info card like screenshot
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -112,8 +109,8 @@ fun AboutUsScreen(
                 DeveloperRowCard(
                     name = "Sharmayne Cena",
                     course = "BS Computer Engineering",
-                    role = "Front End and Back End Developer",
-                    avatarRes = R.drawable.avatar, // replace if you have a better dev image
+                    role = "Full-Stack Developer",
+                    avatarRes = R.drawable.cena,
                     cardBg = cardBg,
                     cardBorder = cardBorder,
                     textColor = textColor
@@ -124,17 +121,35 @@ fun AboutUsScreen(
                 DeveloperRowCard(
                     name = "Christina Sevilla",
                     course = "BS Computer Engineering",
-                    role = "Front End and Back End Developer",
-                    avatarRes = R.drawable.avatar, // replace if you have a better dev image
+                    role = "Full-Stack Developer",
+                    avatarRes = R.drawable.sevilla,
                     cardBg = cardBg,
                     cardBorder = cardBorder,
                     textColor = textColor
                 )
 
+                Spacer(Modifier.height(18.dp))
+
+                Text(
+                    text = "PROJECT OVERSEER",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Black,
+                    color = UserUI.DarkBlue
+                )
+
                 Spacer(Modifier.height(12.dp))
+
+                DeveloperRowCard(
+                    name = "Engr. Emmy Grace Requillo",
+                    course = "Mapua MCM Professor",
+                    role = "Project Adviser",
+                    avatarRes = R.drawable.emmy,
+                    cardBg = cardBg,
+                    cardBorder = cardBorder,
+                    textColor = textColor
+                )
             }
 
-            // ✅ Bottom pinned navbar (UserNavBar.kt)
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 UserNavBar(
                     modifier = Modifier,
@@ -174,7 +189,7 @@ private fun DeveloperRowCard(
             Image(
                 painter = painterResource(avatarRes),
                 contentDescription = null,
-                modifier = Modifier.size(46.dp)
+                modifier = Modifier.size(60.dp)
             )
         }
 

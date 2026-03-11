@@ -16,7 +16,6 @@ import com.example.bantaycampus01.screens.LoginScreen
 import com.example.bantaycampus01.screens.RegistrationScreen
 import com.example.bantaycampus01.screens.User.Menu.AboutUsScreen
 import com.example.bantaycampus01.screens.User.Menu.AccountInfoScreen
-import com.example.bantaycampus01.screens.User.Menu.NotificationSettingsScreen
 import com.example.bantaycampus01.screens.User.Menu.ReportStatusScreen
 import com.example.bantaycampus01.screens.User.UserAlertDetailsScreen
 import com.example.bantaycampus01.screens.User.UserAlertScreen
@@ -97,9 +96,6 @@ fun AppNavigation(modifier: Modifier = Modifier){
         }
         composable("SchoolContact_Screen"){
             SchoolContactsScreen(modifier, navController)
-        }
-        composable("NotificationSetting_Screen"){
-            NotificationSettingsScreen(modifier, navController)
         }
         composable("AboutUs_Screen"){
             AboutUsScreen(modifier, navController)

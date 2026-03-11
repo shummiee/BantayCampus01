@@ -4,7 +4,17 @@ import androidx.lifecycle.ViewModel
 import com.example.bantaycampus01.model.ReportModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+
+data class UserLatestAlert(
+    val isSos: Boolean = false,
+    val reportId: String = "",
+    val status: String = "PENDING",
+    val category: String = "",
+    val createdAt: Long = 0L,
+    val location: String = "",
+    val description: String = "",
+    val coordinates: String = ""
+)
 
 class ReportViewModel : ViewModel() {
 
@@ -238,6 +248,89 @@ class ReportViewModel : ViewModel() {
             }
             .addOnFailureListener { e ->
                 android.util.Log.e("ReportViewModel", "fetchLatestUserReport failed", e)
+                onFailure(e)
+            }
+    }
+
+    fun fetchLatestUserAlert(
+        onSuccess: (UserLatestAlert?) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val currentUser = auth.currentUser
+
+        if (currentUser == null) {
+            onFailure(Exception("User is not logged in."))
+            return
+        }
+
+        db.collection("reports")
+            .whereEqualTo("userId", currentUser.uid)
+            .get()
+            .addOnSuccessListener { reportResult ->
+
+                val latestReport = reportResult.documents
+                    .mapNotNull { it.toObject(ReportModel::class.java) }
+                    .maxByOrNull { it.createdAt }
+                    ?.let { report ->
+                        UserLatestAlert(
+                            isSos = false,
+                            reportId = report.reportId,
+                            status = report.status,
+                            category = report.incidentType,
+                            createdAt = report.createdAt,
+                            location = report.location,
+                            description = report.description,
+                            coordinates = ""
+                        )
+                    }
+
+                db.collection("sos_alerts")
+                    .whereEqualTo("userId", currentUser.uid)
+                    .get()
+                    .addOnSuccessListener { sosResult ->
+
+                        val latestSos = sosResult.documents
+                            .maxByOrNull { it.getLong("createdAt") ?: 0L }
+                            ?.let { doc ->
+                                val latitude = doc.getDouble("latitude")
+                                val longitude = doc.getDouble("longitude")
+
+                                val coordinatesText =
+                                    if (latitude != null && longitude != null) {
+                                        "Lat: $latitude, Lng: $longitude"
+                                    } else {
+                                        ""
+                                    }
+
+                                UserLatestAlert(
+                                    isSos = true,
+                                    reportId = doc.getString("reportId") ?: doc.id,
+                                    status = doc.getString("status") ?: "PENDING",
+                                    category = "SOS Alert",
+                                    createdAt = doc.getLong("createdAt") ?: 0L,
+                                    location = doc.getString("location") ?: "",
+                                    description = doc.getString("message") ?: "SOS Emergency",
+                                    coordinates = coordinatesText
+                                )
+                            }
+
+                        val latestAlert = when {
+                            latestReport == null && latestSos == null -> null
+                            latestReport == null -> latestSos
+                            latestSos == null -> latestReport
+                            latestSos.createdAt > latestReport.createdAt -> latestSos
+                            else -> latestReport
+                        }
+
+                        onSuccess(latestAlert)
+                    }
+                    .addOnFailureListener { e ->
+                        android.util.Log.e("ReportViewModel", "fetchLatestUserAlert SOS failed", e)
+                        onFailure(e)
+                    }
+            }
+            .addOnFailureListener { e ->
+                android.util.Log.e("ReportViewModel", "fetchLatestUserAlert reports failed", e)
                 onFailure(e)
             }
     }

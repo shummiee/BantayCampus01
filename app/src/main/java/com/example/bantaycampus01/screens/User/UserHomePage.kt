@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.model.ReportModel
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
@@ -63,6 +62,7 @@ import com.google.firebase.firestore.ListenerRegistration
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.bantaycampus01.viewmodel.UserLatestAlert
 
 @Composable
 fun UserHomePage(
@@ -111,7 +111,7 @@ fun UserHomePage(
     var reportDescription by rememberSaveable { mutableStateOf("") }
     var urgency by rememberSaveable { mutableStateOf(UrgencyLevel.MODERATE) }
 
-    var latestReport by remember { mutableStateOf<ReportModel?>(null) }
+    var latestAlert by remember { mutableStateOf<UserLatestAlert?>(null) }
 
     val statusDotColor = when (campusStatusState.uppercase()) {
         "SAFE", "RESOLVED" -> UserUI.Green
@@ -450,23 +450,23 @@ fun UserHomePage(
                         fg = UserUI.DarkBlue,
                         icon = R.drawable.risk,
                         onClick = {
-                            reportViewModel.fetchLatestUserReport(
-                                onSuccess = { report ->
-                                    if (report == null) {
+                            reportViewModel.fetchLatestUserAlert(
+                                onSuccess = { alert ->
+                                    if (alert == null) {
                                         Toast.makeText(
                                             context,
-                                            "No report found.",
+                                            "No report or SOS found.",
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     } else {
-                                        latestReport = report
+                                        latestAlert = alert
                                         showReportStatus = true
                                     }
                                 },
                                 onFailure = {
                                     Toast.makeText(
                                         context,
-                                        "Failed to load latest report: ${it.localizedMessage}",
+                                        "Failed to load latest status: ${it.localizedMessage}",
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
@@ -581,20 +581,30 @@ fun UserHomePage(
 
         ReportDetailDialog(
             show = showReportStatus,
-            reportIdLabel = "Report ID: ${latestReport?.reportId ?: "N/A"}",
-            statusLabel = latestReport?.status ?: "Unknown",
-            statusColor = when ((latestReport?.status ?: "").uppercase()) {
+            isSos = latestAlert?.isSos == true,
+            reportIdLabel = if (latestAlert?.isSos == true) {
+                "SOS ID: ${latestAlert?.reportId ?: "N/A"}"
+            } else {
+                "Report ID: ${latestAlert?.reportId ?: "N/A"}"
+            },
+            statusLabel = latestAlert?.status ?: "Unknown",
+            statusColor = when ((latestAlert?.status ?: "").uppercase()) {
                 "PENDING" -> Color(0xFFF4B400)
                 "RESPONDING" -> Color(0xFFFF9800)
                 "RESOLVED" -> Color(0xFF29C65E)
                 else -> Color.Gray
             },
-            category = "🚨 ${latestReport?.incidentType ?: "N/A"}",
-            dateTime = latestReport?.createdAt?.let {
+            category = if (latestAlert?.isSos == true) {
+                "🆘 ${latestAlert?.category ?: "SOS Alert"}"
+            } else {
+                "🚨 ${latestAlert?.category ?: "N/A"}"
+            },
+            dateTime = latestAlert?.createdAt?.let {
                 SimpleDateFormat("MMM d, yyyy - h:mm a", Locale.getDefault()).format(Date(it))
             } ?: "N/A",
-            location = latestReport?.location ?: "N/A",
-            description = latestReport?.description ?: "No description provided.",
+            location = latestAlert?.location ?: "N/A",
+            description = latestAlert?.description ?: "No description provided.",
+            coordinates = latestAlert?.coordinates ?: "",
             hasAttachment = false,
             onViewAttachment = { },
             onMarkSafe = {
@@ -603,7 +613,7 @@ fun UserHomePage(
             onShowMarkedSafe = { showMarkedSafeDialog = true },
             onDismiss = {
                 showReportStatus = false
-                latestReport = null
+                latestAlert = null
             }
         )
 

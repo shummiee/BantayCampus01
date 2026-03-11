@@ -425,45 +425,6 @@ fun AdminSafetyPageUI(
             }
 
             Spacer(Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                InfoPanel(
-                    modifier = Modifier.weight(1f),
-                    panelBg = header,
-                    title = "EMERGENCY CONTACTS",
-                    titleBg = DarkGrayBlue,
-                    titleTextColor = White,
-                    onEdit = onEditContacts
-                ) {
-                    MiniWhiteCard(title = "ADMIN", body = "+63 912 3456 789")
-                    Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "GUARD", body = "+63 912 3456 789")
-                    Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "CLINIC", body = "+63 912 3456 789")
-                }
-
-                InfoPanel(
-                    modifier = Modifier.weight(1f),
-                    panelBg = lightPanel2,
-                    title = "FIRE EXIT MAPS",
-                    titleBg = DarkGrayBlue,
-                    titleTextColor = White,
-                    onEdit = onEditMaps
-                ) {
-                    MiniWhiteCard(title = "ACADEMIC BUILDING", body = "2ND FLOOR")
-                    Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "ACADEMIC BUILDING", body = "3RD FLOOR")
-                    Spacer(Modifier.height(8.dp))
-                    MiniWhiteCard(title = "ACADEMIC BUILDING", body = "4TH FLOOR")
-                }
-            }
-
-            Spacer(Modifier.height(90.dp))
         }
 
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {

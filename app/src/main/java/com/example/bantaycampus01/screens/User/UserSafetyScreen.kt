@@ -1,5 +1,7 @@
 package com.example.bantaycampus01.screens.User
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -148,6 +150,17 @@ fun UserSafetyPageUI(
         "CAUTION" -> Color(0xFFF4B400)
         "RESTRICTED" -> Color(0xFFE53935)
         else -> UserUI.Green
+    }
+
+    fun openDialer(phoneNumber: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Unable to open phone app.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -422,7 +435,7 @@ fun UserSafetyPageUI(
                         title = "ADMIN",
                         body = "+63 912 3456 789",
                         onClick = {
-                            onViewContactsClick()
+                            openDialer("+639123456789")
                         }
                     )
 
@@ -430,9 +443,9 @@ fun UserSafetyPageUI(
 
                     MiniWhiteCard(
                         title = "GUARD",
-                        body = "+63 912 3456 789",
+                        body = "+63 917 123 4567",
                         onClick = {
-                            onViewContactsClick()
+                            openDialer("+639171234567")
                         }
                     )
 
@@ -440,9 +453,9 @@ fun UserSafetyPageUI(
 
                     MiniWhiteCard(
                         title = "CLINIC",
-                        body = "+63 912 3456 789",
+                        body = "+63 918 987 6543",
                         onClick = {
-                            onViewContactsClick()
+                            openDialer("+639189876543")
                         }
                     )
                 }

@@ -172,11 +172,6 @@ fun AccountInfoScreen(
                         dividerColor = tableDivider
                     )
                     InfoRowTable(
-                        left = "Year Level",
-                        right = yearLevel,
-                        dividerColor = tableDivider
-                    )
-                    InfoRowTable(
                         left = "Password",
                         right = "************",
                         showEdit = true,

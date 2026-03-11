@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.R
+import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.viewmodel.AuthViewModel
@@ -192,7 +193,7 @@ fun AdminProfileScreen(
 
         // Navbar
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            UserNavBar(
+            AdminNavBar(
                 modifier = Modifier,
                 navController = navController
             )

@@ -20,29 +20,48 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.R
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserTopBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ChangePasswordDialog
+import com.example.bantaycampus01.viewmodel.AuthViewModel
 
 @Composable
 fun AccountInfoScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
 ) {
-    // Table colors to match screenshot
     val tableBg = Color(0xFFC7D2E8)
     val tableBorder = Color(0xFF6F7A8E)
     val tableDivider = Color(0xFF6F7A8E)
 
-    // ✅ Dialog states
     var showChangePassword by remember { mutableStateOf(false) }
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
-    // ✅ Use Scaffold but DO NOT use bottomBar (UserNavBar is pinned like your other screens)
+    // User info states
+    var username by remember { mutableStateOf("") }
+    var userRole by remember { mutableStateOf("") }
+    var studentId by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var contactNumber by remember { mutableStateOf("") }
+    var department by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        authViewModel.getUserProfile { name, userEmail, userContactNumber, idNumber, userDepartment, role ->
+            username = if (!name.isNullOrBlank()) name else "User"
+            userRole = if (!role.isNullOrBlank()) role else "User"
+            studentId = if (!idNumber.isNullOrBlank()) idNumber else "N/A"
+            email = if (!userEmail.isNullOrBlank()) userEmail else "N/A"
+            contactNumber = if (!userContactNumber.isNullOrBlank()) userContactNumber else "N/A"
+            department = if (!userDepartment.isNullOrBlank()) userDepartment else "N/A"
+        }
+    }
+
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
@@ -62,12 +81,11 @@ fun AccountInfoScreen(
                 modifier = modifier
                     .padding(padding)
                     .fillMaxSize()
-                    .padding(bottom = 80.dp) // ✅ space for UserNavBar
+                    .padding(bottom = 80.dp)
                     .padding(horizontal = 18.dp)
                     .padding(top = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Avatar
                 Box(
                     modifier = Modifier
                         .size(102.dp)
@@ -86,7 +104,7 @@ fun AccountInfoScreen(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Sharmayne Cena",
+                        text = username,
                         fontWeight = FontWeight.Black,
                         fontSize = 16.sp,
                         color = UserUI.DarkBlue
@@ -94,7 +112,7 @@ fun AccountInfoScreen(
                 }
 
                 Text(
-                    text = "Student",
+                    text = userRole,
                     fontSize = 12.sp,
                     fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Medium,
@@ -115,7 +133,6 @@ fun AccountInfoScreen(
 
                 Spacer(Modifier.height(10.dp))
 
-                // ✅ Bordered table (matches screenshot)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -124,17 +141,26 @@ fun AccountInfoScreen(
                         .border(1.dp, tableBorder, RoundedCornerShape(2.dp))
                 ) {
                     InfoRowTable(
-                        left = "Student ID",
-                        right = "2023150518",
+                        left = "ID Number",
+                        right = studentId,
                         showEdit = false,
                         dividerColor = tableDivider
                     )
-                    InfoRowTable("E-mail Address", "saCena@mmc.edu.ph", dividerColor = tableDivider)
-                    InfoRowTable("Contact Number", "0939 815 4694", dividerColor = tableDivider)
-                    InfoRowTable("Department", "CEA", dividerColor = tableDivider)
-                    InfoRowTable("Year Level", "3rd Year", dividerColor = tableDivider)
-
-                    // ✅ Pencil opens ChangePasswordDialog
+                    InfoRowTable(
+                        left = "E-mail Address",
+                        right = email,
+                        dividerColor = tableDivider
+                    )
+                    InfoRowTable(
+                        left = "Contact Number",
+                        right = contactNumber,
+                        dividerColor = tableDivider
+                    )
+                    InfoRowTable(
+                        left = "Department",
+                        right = department,
+                        dividerColor = tableDivider
+                    )
                     InfoRowTable(
                         left = "Password",
                         right = "************",
@@ -146,7 +172,6 @@ fun AccountInfoScreen(
                 }
             }
 
-            // ✅ Bottom pinned navbar (UserNavBar.kt)
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 UserNavBar(
                     modifier = Modifier,
@@ -155,7 +180,6 @@ fun AccountInfoScreen(
             }
         }
 
-        // ✅ Change Password Popup (kept outside Box so it overlays correctly)
         ChangePasswordDialog(
             show = showChangePassword,
             currentPassword = currentPassword,
@@ -165,7 +189,6 @@ fun AccountInfoScreen(
             confirmPassword = confirmPassword,
             onConfirmPasswordChange = { confirmPassword = it },
             onConfirm = {
-                // UI-only for now
                 showChangePassword = false
                 currentPassword = ""
                 newPassword = ""

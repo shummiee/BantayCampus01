@@ -3,6 +3,7 @@ package com.example.bantaycampus01.screens.User
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,18 +27,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bantaycampus01.R
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.screens.User.Menu.PopUps.MarkSafeDialog
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.viewmodel.ReportViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -131,6 +135,7 @@ fun UserSafetyPageUI(
     val db = remember { FirebaseFirestore.getInstance() }
 
     var showMarkedSafeDialog by rememberSaveable { mutableStateOf(false) }
+    var showFireExitMapDialog by rememberSaveable { mutableStateOf(false) }
 
     var currentStatusState by rememberSaveable { mutableStateOf(currentStatusText) }
     var lastCheckinState by rememberSaveable { mutableStateOf(lastCheckinText) }
@@ -430,7 +435,6 @@ fun UserSafetyPageUI(
                     title = "EMERGENCY CONTACTS",
                     titleTextColor = Color.White
                 ) {
-
                     MiniWhiteCard(
                         title = "ADMIN",
                         body = "+63 912 3456 789",
@@ -466,12 +470,11 @@ fun UserSafetyPageUI(
                     title = "FIRE EXIT MAPS",
                     titleTextColor = UserUI.DarkBlue
                 ) {
-
                     MiniWhiteCard(
                         title = "ACADEMIC BUILDING",
                         body = "2ND FLOOR",
                         onClick = {
-                            onViewMapsClick()
+                            showFireExitMapDialog = true
                         }
                     )
 
@@ -481,7 +484,7 @@ fun UserSafetyPageUI(
                         title = "ACADEMIC BUILDING",
                         body = "3RD FLOOR",
                         onClick = {
-                            onViewMapsClick()
+                            showFireExitMapDialog = true
                         }
                     )
 
@@ -491,7 +494,7 @@ fun UserSafetyPageUI(
                         title = "ACADEMIC BUILDING",
                         body = "4TH FLOOR",
                         onClick = {
-                            onViewMapsClick()
+                            showFireExitMapDialog = true
                         }
                     )
                 }
@@ -512,6 +515,12 @@ fun UserSafetyPageUI(
             onConfirm = { showMarkedSafeDialog = false },
             onDismiss = { showMarkedSafeDialog = false }
         )
+
+        if (showFireExitMapDialog) {
+            FireExitMapDialog(
+                onDismiss = { showFireExitMapDialog = false }
+            )
+        }
     }
 }
 
@@ -570,7 +579,6 @@ private fun MiniWhiteCard(
             .padding(vertical = 10.dp, horizontal = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Text(
             text = title,
             fontSize = 14.sp,
@@ -587,5 +595,52 @@ private fun MiniWhiteCard(
             color = UserUI.DarkBlue,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+private fun FireExitMapDialog(
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Fire Exit Map",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = UserUI.DarkBlue
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Image(
+                painter = painterResource(id = R.drawable.sample_fire_exit),
+                contentDescription = "Fire Exit Map",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(400.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = UserUI.DarkBlue
+                )
+            ) {
+                Text("Close", color = Color.White)
+            }
+        }
     }
 }

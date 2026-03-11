@@ -1,6 +1,10 @@
 package com.example.bantaycampus01.screens.User.Menu
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -13,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserTopBar
@@ -23,7 +28,19 @@ fun SchoolContactsScreen(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
-    // ✅ Do NOT use bottomBar; pin UserNavBar like UserProfileScreen
+    val context = LocalContext.current
+
+    fun openDialer(phoneNumber: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Unable to open phone app.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Scaffold(
         containerColor = UserUI.Bg,
         topBar = {
@@ -43,7 +60,7 @@ fun SchoolContactsScreen(
                 modifier = modifier
                     .padding(padding)
                     .fillMaxSize()
-                    .padding(bottom = 80.dp) // ✅ space for UserNavBar
+                    .padding(bottom = 80.dp)
                     .padding(horizontal = 18.dp)
                     .padding(top = 10.dp)
             ) {
@@ -63,16 +80,27 @@ fun SchoolContactsScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column {
-                        ContactRow("School Clinic", "+63 912 345 6789")
+                        ContactRow(
+                            name = "School Clinic",
+                            number = "+63 912 345 6789",
+                            onClick = { openDialer("+639123456789") }
+                        )
                         DividerLine()
-                        ContactRow("Guard House", "+63 912 345 6789")
+                        ContactRow(
+                            name = "Guard House",
+                            number = "+63 917 123 4567",
+                            onClick = { openDialer("+639171234567") }
+                        )
                         DividerLine()
-                        ContactRow("Admin", "+63 912 345 6789")
+                        ContactRow(
+                            name = "Admin",
+                            number = "+63 918 987 6543",
+                            onClick = { openDialer("+639189876543") }
+                        )
                     }
                 }
             }
 
-            // ✅ Bottom pinned navbar (UserNavBar.kt)
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 UserNavBar(
                     modifier = Modifier,
@@ -84,10 +112,15 @@ fun SchoolContactsScreen(
 }
 
 @Composable
-private fun ContactRow(name: String, number: String) {
+private fun ContactRow(
+    name: String,
+    number: String,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Text(

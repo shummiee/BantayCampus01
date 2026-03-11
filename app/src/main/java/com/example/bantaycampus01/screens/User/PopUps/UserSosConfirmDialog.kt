@@ -1,6 +1,11 @@
 package com.example.bantaycampus01.screens.User.PopUps
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,10 +24,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 import com.example.bantaycampus01.viewmodel.SosViewModel
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -36,14 +45,16 @@ fun UserSosConfirmDialog(
 
     val dialogScroll = rememberScrollState()
     val context = LocalContext.current
-    var showSosSentDialog by remember { mutableStateOf(false) }
+    val activity = context as? Activity
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    // Local state for the current user
+    var showSosSentDialog by remember { mutableStateOf(false) }
+    var isSending by remember { mutableStateOf(false) }
+
     var currentUserName by remember { mutableStateOf<String?>(null) }
     var currentUserIdNumber by remember { mutableStateOf<String?>(null) }
     var currentUserId by remember { mutableStateOf<String?>(null) }
 
-    // Fetch user profile once when dialog opens
     LaunchedEffect(Unit) {
         authViewModel.getUserProfile { name, email, contact, idNumber, department, role ->
             currentUserName = name
@@ -52,7 +63,83 @@ fun UserSosConfirmDialog(
         }
     }
 
-    // Show the SOS Sent dialog if SOS was successfully sent
+    fun sendSosWithLocation() {
+        val userId = currentUserId
+        val userName = currentUserName
+        val userIdNumber = currentUserIdNumber
+
+        if (userId == null || userName.isNullOrBlank() || userIdNumber.isNullOrBlank()) {
+            Toast.makeText(context, "User info not loaded", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val hasFineLocation = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFineLocation) {
+            Toast.makeText(context, "Location permission is required.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        isSending = true
+
+        val cancellationTokenSource = CancellationTokenSource()
+
+        fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            cancellationTokenSource.token
+        ).addOnSuccessListener { currentLocation ->
+            if (currentLocation == null) {
+                isSending = false
+                Toast.makeText(context, "Unable to get current location.", Toast.LENGTH_SHORT).show()
+                return@addOnSuccessListener
+            }
+
+            sosViewModel.sendSOS(
+                userId = userId,
+                userName = userName,
+                userIdNumber = userIdNumber,
+                latitude = currentLocation.latitude,
+                longitude = currentLocation.longitude,
+                onSuccess = {
+                    isSending = false
+                    showSosSentDialog = true
+                },
+                onFailure = {
+                    isSending = false
+                    Toast.makeText(
+                        context,
+                        "SOS Failed: ${it.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        }.addOnFailureListener {
+            isSending = false
+            Toast.makeText(
+                context,
+                "Failed to get location: ${it.message}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            sendSosWithLocation()
+        } else {
+            Toast.makeText(
+                context,
+                "Location permission denied. SOS not sent.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     if (showSosSentDialog) {
         UserSosSentDialog(
             show = true,
@@ -63,7 +150,9 @@ fun UserSosConfirmDialog(
         return
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(onDismissRequest = {
+        if (!isSending) onDismiss()
+    }) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,7 +168,6 @@ fun UserSosConfirmDialog(
                     .verticalScroll(dialogScroll)
                     .padding(14.dp)
             ) {
-                // --- Header ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Top
@@ -96,7 +184,10 @@ fun UserSosConfirmDialog(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    IconButton(onClick = onDismiss) {
+                    IconButton(
+                        onClick = onDismiss,
+                        enabled = !isSending
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Close",
@@ -107,7 +198,6 @@ fun UserSosConfirmDialog(
 
                 Spacer(Modifier.height(10.dp))
 
-                // --- Body ---
                 Text(
                     text = "Send Emergency SOS",
                     fontSize = 12.sp,
@@ -141,41 +231,38 @@ fun UserSosConfirmDialog(
 
                 Spacer(Modifier.height(14.dp))
 
-                // --- Buttons ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // SEND SOS Button
                     Button(
                         onClick = {
-                            val userId = currentUserId
-                            val userName = currentUserName
-                            val userIdNumber = currentUserIdNumber
-                            if (userId != null && userName != null && userIdNumber != null) {
-                                sosViewModel.sendSOS(
-                                    userId = userId,
-                                    userName = userName,
-                                    userIdNumber = userIdNumber,
-                                    onSuccess = { showSosSentDialog = true },
-                                    onFailure = {
-                                        Toast.makeText(
-                                            context,
-                                            "SOS Failed: ${it.message}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                )
+                            val hasFineLocation = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.ACCESS_FINE_LOCATION
+                            ) == PackageManager.PERMISSION_GRANTED
+
+                            if (hasFineLocation) {
+                                sendSosWithLocation()
                             } else {
-                                Toast.makeText(context, "User info not loaded", Toast.LENGTH_SHORT).show()
+                                if (activity != null) {
+                                    locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Unable to request location permission.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                         },
+                        enabled = !isSending,
                         colors = ButtonDefaults.buttonColors(containerColor = UserUI.DangerRed),
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            text = "SEND SOS",
+                            text = if (isSending) "SENDING..." else "SEND SOS",
                             fontWeight = FontWeight.Black,
                             fontSize = 12.sp,
                             color = Color.White
@@ -184,9 +271,9 @@ fun UserSosConfirmDialog(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // CANCEL Button
                     Button(
                         onClick = onDismiss,
+                        enabled = !isSending,
                         colors = ButtonDefaults.buttonColors(containerColor = UserUI.DarkBlue),
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)

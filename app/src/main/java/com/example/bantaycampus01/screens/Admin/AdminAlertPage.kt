@@ -1,5 +1,7 @@
 package com.example.bantaycampus01.screens.Admin
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,11 +21,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.model.ReportModel
-import com.example.bantaycampus01.model.SosAlert
 import com.example.bantaycampus01.partials.admin.AdminHeader
 import com.example.bantaycampus01.partials.admin.AdminNavBar
 import com.example.bantaycampus01.screens.Admin.PopUps.AdminDispatchDialog
@@ -67,7 +70,10 @@ data class AdminIncomingAlert(
     val rawTimeText: String = "",
     val collectionName: String = "",
     val dispatchedTeams: List<String> = emptyList(),
-    val dispatchNote: String = ""
+    val dispatchNote: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val googleMapsLink: String = ""
 )
 
 @Composable
@@ -88,6 +94,10 @@ fun AdminAlertPage(
 
     var showDispatchDialog by remember { mutableStateOf(false) }
     var selectedAlert by remember { mutableStateOf<AdminIncomingAlert?>(null) }
+
+    var showSosPopup by remember { mutableStateOf(false) }
+    var popupSosAlert by remember { mutableStateOf<AdminIncomingAlert?>(null) }
+    val shownSosIds = remember { mutableStateListOf<String>() }
 
     var guardA by remember { mutableStateOf(false) }
     var guardB by remember { mutableStateOf(false) }
@@ -128,6 +138,27 @@ fun AdminAlertPage(
 
         alerts.clear()
         alerts.addAll(combined)
+    }
+
+    fun openMap(link: String, latitude: Double?, longitude: Double?) {
+        val url = when {
+            link.isNotBlank() -> link
+            latitude != null && longitude != null ->
+                "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude"
+            else -> ""
+        }
+
+        if (url.isBlank()) {
+            Toast.makeText(context, "Location link not available.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Unable to open map.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     DisposableEffect(Unit) {
@@ -194,27 +225,49 @@ fun AdminAlertPage(
                         return@addSnapshotListener
                     }
 
-                    sosCache = snapshot?.documents?.mapNotNull { doc ->
-                        val sos = doc.toObject(SosAlert::class.java) ?: return@mapNotNull null
+                    sosCache = snapshot?.documents?.map { doc ->
+                        val latitude = doc.getDouble("latitude")
+                        val longitude = doc.getDouble("longitude")
+                        val locationText = if (latitude != null && longitude != null) {
+                            "Lat: $latitude, Lng: $longitude"
+                        } else {
+                            doc.getString("location") ?: "Location not provided"
+                        }
 
                         AdminIncomingAlert(
                             docId = doc.id,
-                            alertId = if (sos.reportId.isNotBlank()) sos.reportId else doc.id,
+                            alertId = doc.getString("reportId") ?: doc.id,
                             source = "SOS",
                             title = "SOS Emergency",
-                            userName = if (sos.userName.isNotBlank()) sos.userName else "Unknown User",
-                            idNumber = if (sos.idNumber.isNotBlank()) sos.idNumber else "No ID number",
-                            location = doc.getString("location") ?: "Location not provided",
-                            description = if (sos.message.isNotBlank()) sos.message else "SOS Emergency",
+                            userName = doc.getString("userName") ?: "Unknown User",
+                            idNumber = doc.getString("idNumber") ?: "No ID number",
+                            location = locationText,
+                            description = doc.getString("message") ?: "SOS Emergency",
                             urgency = "HIGH",
-                            status = if (sos.status.isNotBlank()) sos.status else "PENDING",
+                            status = doc.getString("status") ?: "PENDING",
                             createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
-                            rawTimeText = sos.timestamp,
+                            rawTimeText = doc.getString("timestamp") ?: "",
                             collectionName = "sos_alerts",
                             dispatchedTeams = doc.get("dispatchedTeams") as? List<String> ?: emptyList(),
-                            dispatchNote = doc.getString("dispatchNote") ?: ""
+                            dispatchNote = doc.getString("dispatchNote") ?: "",
+                            latitude = latitude,
+                            longitude = longitude,
+                            googleMapsLink = doc.getString("googleMapsLink") ?: ""
                         )
                     } ?: emptyList()
+
+                    val newestUnseenSos = sosCache
+                        .filter {
+                            it.status.uppercase() != "RESOLVED" &&
+                                    !shownSosIds.contains(it.docId)
+                        }
+                        .maxByOrNull { it.createdAt }
+
+                    if (newestUnseenSos != null) {
+                        popupSosAlert = newestUnseenSos
+                        showSosPopup = true
+                        shownSosIds.add(newestUnseenSos.docId)
+                    }
 
                     sosLoaded = true
                     mergeAlerts()
@@ -298,6 +351,13 @@ fun AdminAlertPage(
                                     collectionName = alert.collectionName,
                                     docId = alert.docId,
                                     newStatus = "RESOLVED"
+                                )
+                            },
+                            onOpenMap = {
+                                openMap(
+                                    link = alert.googleMapsLink,
+                                    latitude = alert.latitude,
+                                    longitude = alert.longitude
                                 )
                             }
                         )
@@ -391,6 +451,28 @@ fun AdminAlertPage(
             resetDispatchForm()
         }
     )
+
+    if (showSosPopup && popupSosAlert != null) {
+        AdminSosPopupDialog(
+            alert = popupSosAlert!!,
+            onDismiss = {
+                showSosPopup = false
+            },
+            onRespond = {
+                showSosPopup = false
+                selectedAlert = popupSosAlert
+                resetDispatchForm()
+                showDispatchDialog = true
+            },
+            onOpenMap = {
+                openMap(
+                    link = popupSosAlert?.googleMapsLink.orEmpty(),
+                    latitude = popupSosAlert?.latitude,
+                    longitude = popupSosAlert?.longitude
+                )
+            }
+        )
+    }
 }
 
 private fun updateAlertStatus(
@@ -443,7 +525,8 @@ private fun AlertCard(
     alert: AdminIncomingAlert,
     onAcknowledge: () -> Unit,
     onRespond: () -> Unit,
-    onResolve: () -> Unit
+    onResolve: () -> Unit,
+    onOpenMap: () -> Unit
 ) {
     val cardBg = Color(0xFFE6E6E6)
     val borderColor = Color(0xFF6F7A8E)
@@ -503,6 +586,15 @@ private fun AlertCard(
             fontSize = 14.sp,
             color = TextOnWhite
         )
+
+        if (alert.source == "SOS" && (alert.latitude != null && alert.longitude != null)) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Coordinates: ${alert.latitude}, ${alert.longitude}",
+                fontSize = 13.sp,
+                color = TextOnWhite
+            )
+        }
 
         Text(
             text = "Description: ${alert.description}",
@@ -583,6 +675,16 @@ private fun AlertCard(
                 modifier = Modifier.weight(1f)
             )
         }
+
+        if (alert.source == "SOS" && (alert.googleMapsLink.isNotBlank() || (alert.latitude != null && alert.longitude != null))) {
+            Spacer(modifier = Modifier.height(10.dp))
+            MiniPillButton(
+                text = "OPEN MAP",
+                container = Color(0xFF2E7D32),
+                onClick = onOpenMap,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -608,6 +710,53 @@ private fun MiniPillButton(
             maxLines = 1
         )
     }
+}
+
+@Composable
+private fun AdminSosPopupDialog(
+    alert: AdminIncomingAlert,
+    onDismiss: () -> Unit,
+    onRespond: () -> Unit,
+    onOpenMap: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "🚨 New SOS Alert",
+                fontWeight = FontWeight.Bold,
+                color = Color.Red
+            )
+        },
+        text = {
+            Column {
+                Text("User: ${alert.userName}")
+                Text("ID Number: ${alert.idNumber}")
+                Spacer(modifier = Modifier.height(6.dp))
+                Text("Location: ${alert.location}")
+                if (alert.latitude != null && alert.longitude != null) {
+                    Text("Coordinates: ${alert.latitude}, ${alert.longitude}")
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text("Message: ${alert.description}")
+            }
+        },
+        confirmButton = {
+            Row {
+                TextButton(onClick = onOpenMap) {
+                    Text("OPEN MAP")
+                }
+                TextButton(onClick = onRespond) {
+                    Text("RESPOND")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CLOSE")
+            }
+        }
+    )
 }
 
 private fun statusColor(status: String): Color {

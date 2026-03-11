@@ -1,8 +1,10 @@
 package com.example.bantaycampus01.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.bantaycampus01.model.SosAlert
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class SosViewModel : ViewModel() {
 
@@ -19,7 +21,14 @@ class SosViewModel : ViewModel() {
         onFailure: (Exception) -> Unit
     ) {
         val sosRef = db.collection("sos_alerts").document()
-        val formattedTimestamp = com.google.firebase.Timestamp.now().toString()
+        val nowMillis = System.currentTimeMillis()
+
+        val formattedTimestamp = SimpleDateFormat(
+            "MMM d, yyyy - h:mm a",
+            Locale.getDefault()
+        ).format(Date(nowMillis))
+
+        val locationText = "Lat: $latitude, Lng: $longitude"
 
         val sosData = hashMapOf(
             "reportId" to sosRef.id,
@@ -28,9 +37,11 @@ class SosViewModel : ViewModel() {
             "idNumber" to userIdNumber,
             "message" to message,
             "timestamp" to formattedTimestamp,
+            "createdAt" to nowMillis,
             "status" to "PENDING",
             "latitude" to latitude,
             "longitude" to longitude,
+            "location" to locationText,
             "googleMapsLink" to "https://www.google.com/maps/search/?api=1&query=$latitude,$longitude"
         )
 

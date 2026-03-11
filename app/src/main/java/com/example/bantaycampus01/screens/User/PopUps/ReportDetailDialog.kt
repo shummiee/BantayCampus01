@@ -32,30 +32,19 @@ import com.example.bantaycampus01.partials.user.UserUI
 @Composable
 fun ReportDetailDialog(
     show: Boolean,
-
-    // top pill
+    isSos: Boolean = false,
     reportIdLabel: String = "Report ID: #BC-2026-0145",
-
-    // status line
     statusLabel: String = "Responding",
-    statusColor: Color = Color(0xFFF4B400), // orange
-
-    // details
+    statusColor: Color = Color(0xFFF4B400),
     category: String = "🚨 Suspicious Activity",
     dateTime: String = "Feb 3, 2026 – 9:23AM",
     location: String = "Near Library Entrance",
     description: String = "There is a person acting suspiciously near the stairs, checking doors and following students.",
-
-    // attachment
+    coordinates: String = "",
     hasAttachment: Boolean = true,
     onViewAttachment: () -> Unit = {},
-
-    // bottom action (backend/state update)
     onMarkSafe: () -> Unit = {},
-
-    // ✅ NEW: tell parent to show thank-you dialog
     onShowMarkedSafe: () -> Unit = {},
-
     onDismiss: () -> Unit
 ) {
     if (!show) return
@@ -65,6 +54,16 @@ fun ReportDetailDialog(
     val modalShape = RoundedCornerShape(18.dp)
     val pillShape = RoundedCornerShape(6.dp)
     val fieldBorder = Color(0xFFB7B7B7)
+
+    val titleLabel = if (isSos) "SOS ID:" else "Report ID:"
+    val categoryLabel = if (isSos) "Alert Type:" else "Category:"
+    val dateTimeLabel = if (isSos) "Sent At:" else "Date & Time:"
+    val descriptionLabel = if (isSos) "SOS Message:" else "Description:"
+    val finalLocation = when {
+        location.isNotBlank() -> location
+        isSos && coordinates.isNotBlank() -> coordinates
+        else -> "No location provided"
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -82,13 +81,16 @@ fun ReportDetailDialog(
                     .verticalScroll(scroll)
                     .padding(14.dp)
             ) {
-                // Top row: pill + close
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.Top
                 ) {
                     Text(
-                        text = reportIdLabel,
+                        text = if (reportIdLabel.startsWith("Report ID:") || reportIdLabel.startsWith("SOS ID:")) {
+                            reportIdLabel
+                        } else {
+                            "$titleLabel $reportIdLabel"
+                        },
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Black,
                         color = Color.White,
@@ -110,7 +112,6 @@ fun ReportDetailDialog(
 
                 Spacer(Modifier.height(6.dp))
 
-                // Status line
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -147,15 +148,18 @@ fun ReportDetailDialog(
 
                 Spacer(Modifier.height(12.dp))
 
-                // Details
-                DetailRow(label = "Category:", value = category)
-                DetailRow(label = "Date & Time:", value = dateTime)
-                DetailRow(label = "Location:", value = location)
+                DetailRow(label = categoryLabel, value = category)
+                DetailRow(label = dateTimeLabel, value = dateTime)
+                DetailRow(label = "Location:", value = finalLocation)
+
+                if (isSos && coordinates.isNotBlank() && coordinates != finalLocation) {
+                    DetailRow(label = "Coordinates:", value = coordinates)
+                }
 
                 Spacer(Modifier.height(6.dp))
 
                 Text(
-                    text = "Description:",
+                    text = descriptionLabel,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Black,
                     color = UserUI.DarkBlue
@@ -169,93 +173,62 @@ fun ReportDetailDialog(
 
                 Spacer(Modifier.height(10.dp))
 
-                // Attachment row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Attachment:",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Black,
-                        color = UserUI.DarkBlue
-                    )
-
-                    Spacer(Modifier.width(10.dp))
-
-                    if (hasAttachment) {
-                        Row(
-                            modifier = Modifier
-                                .height(28.dp)
-                                .border(1.dp, fieldBorder, RoundedCornerShape(4.dp))
-                                .background(Color(0xFFEDEDED), RoundedCornerShape(4.dp))
-                                .clickable { onViewAttachment() }
-                                .padding(horizontal = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "View Image",
-                                fontSize = 12.sp,
-                                color = UserUI.DarkBlue
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Filled.Image,
-                                contentDescription = "View Attachment",
-                                tint = UserUI.DarkBlue,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    } else {
-                        Text(
-                            text = "None",
-                            fontSize = 13.sp,
-                            color = UserUI.DarkBlue.copy(alpha = 0.7f)
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(18.dp))
-
-                // MARK SAFE button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(
-                        onClick = {
-                            onMarkSafe()        // backend/update state
-                            onDismiss()         // close report dialog
-                            onShowMarkedSafe()  // show thank-you dialog in parent
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = UserUI.DarkBlue),
-                        shape = RoundedCornerShape(18.dp),
-                        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)
+                if (!isSos) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "MARK SAFE",
+                            text = "Attachment:",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Black,
-                            color = Color.White,
-                            fontSize = 14.sp
+                            color = UserUI.DarkBlue
                         )
 
                         Spacer(Modifier.width(10.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF29C65E)),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        if (hasAttachment) {
+                            Row(
+                                modifier = Modifier
+                                    .height(28.dp)
+                                    .border(1.dp, fieldBorder, RoundedCornerShape(4.dp))
+                                    .background(Color(0xFFEDEDED), RoundedCornerShape(4.dp))
+                                    .clickable { onViewAttachment() }
+                                    .padding(horizontal = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "View Image",
+                                    fontSize = 12.sp,
+                                    color = UserUI.DarkBlue
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = Icons.Filled.Image,
+                                    contentDescription = "View Attachment",
+                                    tint = UserUI.DarkBlue,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        } else {
                             Text(
-                                text = "✓",
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Black
+                                text = "None",
+                                fontSize = 13.sp,
+                                color = UserUI.DarkBlue.copy(alpha = 0.7f)
                             )
                         }
                     }
+
+                    Spacer(Modifier.height(18.dp))
+                } else {
+                    Spacer(Modifier.height(18.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+
                 }
             }
         }

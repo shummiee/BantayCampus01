@@ -89,7 +89,6 @@ fun AdminProfileScreen(
                 .padding(top = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar (top-center)
             Box(
                 modifier = Modifier
                     .size(110.dp)
@@ -127,7 +126,6 @@ fun AdminProfileScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Pill buttons (match screenshot)
             ProfilePillRow(
                 icon = { Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Color.White) },
                 text = "ACCOUNT INFO",
@@ -136,20 +134,11 @@ fun AdminProfileScreen(
 
             ProfilePillRow(
                 icon = { Icon(Icons.Filled.Call, contentDescription = null, tint = Color.White) },
-                text = "EMERGENCY CONTACTS", // (kept as screenshot spelling)
+                text = "EMERGENCY CONTACTS",
                 onClick = { navController.navigate("SchoolContact_Screen") }
             )
-
-            ProfilePillRow(
-                icon = { Icon(Icons.Filled.Settings, contentDescription = null, tint = Color.White) },
-                text = "NOTIFICATION SETTINGS",
-                onClick = { navController.navigate("NotificationSetting_Screen") }
-            )
-
-            // Big spacing before logout (like screenshot)
             Spacer(modifier = Modifier.height(180.dp))
 
-            // Logout pill (centered)
             Surface(
                 onClick = {
                     authViewModel.logout { success, error ->

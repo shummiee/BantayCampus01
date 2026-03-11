@@ -29,7 +29,6 @@ class ReportViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-
         val user = auth.currentUser
 
         if (user == null) {
@@ -171,29 +170,16 @@ class ReportViewModel : ViewModel() {
             return
         }
 
-        android.util.Log.d("ReportDebug", "Current UID: ${currentUser.uid}")
-
         db.collection("reports")
+            .whereEqualTo("userId", currentUser.uid)
             .get()
             .addOnSuccessListener { result ->
-                for (document in result.documents) {
-                    android.util.Log.d(
-                        "ReportDebug",
-                        "Doc ID=${document.id}, userId=${document.getString("userId")}, incidentType=${document.getString("incidentType")}"
-                    )
-                }
-
                 val reports = result.documents.mapNotNull { document ->
                     document.toObject(ReportModel::class.java)
-                }.filter { report ->
-                    report.userId == currentUser.uid
                 }
-
-                android.util.Log.d("ReportDebug", "Matched reports count: ${reports.size}")
                 onSuccess(reports)
             }
             .addOnFailureListener { e ->
-                android.util.Log.e("ReportDebug", "fetchUserReports failed", e)
                 onFailure(e)
             }
     }
@@ -247,7 +233,6 @@ class ReportViewModel : ViewModel() {
                 onSuccess(latestReport)
             }
             .addOnFailureListener { e ->
-                android.util.Log.e("ReportViewModel", "fetchLatestUserReport failed", e)
                 onFailure(e)
             }
     }
@@ -325,12 +310,83 @@ class ReportViewModel : ViewModel() {
                         onSuccess(latestAlert)
                     }
                     .addOnFailureListener { e ->
-                        android.util.Log.e("ReportViewModel", "fetchLatestUserAlert SOS failed", e)
                         onFailure(e)
                     }
             }
             .addOnFailureListener { e ->
-                android.util.Log.e("ReportViewModel", "fetchLatestUserAlert reports failed", e)
+                onFailure(e)
+            }
+    }
+
+    fun fetchUserHistory(
+        onSuccess: (List<UserLatestAlert>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val currentUser = auth.currentUser
+
+        if (currentUser == null) {
+            onFailure(Exception("User is not logged in."))
+            return
+        }
+
+        db.collection("reports")
+            .whereEqualTo("userId", currentUser.uid)
+            .get()
+            .addOnSuccessListener { reportResult ->
+
+                val reportHistory = reportResult.documents.mapNotNull { doc ->
+                    doc.toObject(ReportModel::class.java)?.let { report ->
+                        UserLatestAlert(
+                            isSos = false,
+                            reportId = report.reportId,
+                            status = report.status,
+                            category = report.incidentType,
+                            createdAt = report.createdAt,
+                            location = report.location,
+                            description = report.description,
+                            coordinates = ""
+                        )
+                    }
+                }
+
+                db.collection("sos_alerts")
+                    .whereEqualTo("userId", currentUser.uid)
+                    .get()
+                    .addOnSuccessListener { sosResult ->
+
+                        val sosHistory = sosResult.documents.map { doc ->
+                            val latitude = doc.getDouble("latitude")
+                            val longitude = doc.getDouble("longitude")
+
+                            val coordinatesText =
+                                if (latitude != null && longitude != null) {
+                                    "Lat: $latitude, Lng: $longitude"
+                                } else {
+                                    ""
+                                }
+
+                            UserLatestAlert(
+                                isSos = true,
+                                reportId = doc.getString("reportId") ?: doc.id,
+                                status = doc.getString("status") ?: "PENDING",
+                                category = "SOS Alert",
+                                createdAt = doc.getLong("createdAt") ?: 0L,
+                                location = doc.getString("location") ?: "",
+                                description = doc.getString("message") ?: "SOS Emergency",
+                                coordinates = coordinatesText
+                            )
+                        }
+
+                        val combinedHistory = (reportHistory + sosHistory)
+                            .sortedByDescending { it.createdAt }
+
+                        onSuccess(combinedHistory)
+                    }
+                    .addOnFailureListener { e ->
+                        onFailure(e)
+                    }
+            }
+            .addOnFailureListener { e ->
                 onFailure(e)
             }
     }

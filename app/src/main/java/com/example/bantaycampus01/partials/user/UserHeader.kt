@@ -72,13 +72,6 @@ fun UserHeader(
                     fontWeight = FontWeight.Bold,
                     color = TextOnWhite
                 )
-
-                Text(
-                    text = "View Profile",
-                    fontSize = 13.sp,
-                    fontStyle = FontStyle.Italic,
-                    color = SubTextLabel
-                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

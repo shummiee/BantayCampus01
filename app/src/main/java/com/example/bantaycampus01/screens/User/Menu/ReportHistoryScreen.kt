@@ -34,12 +34,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.bantaycampus01.model.ReportModel
 import com.example.bantaycampus01.partials.user.UserHeader
 import com.example.bantaycampus01.partials.user.UserNavBar
 import com.example.bantaycampus01.partials.user.UserUI
 import com.example.bantaycampus01.screens.User.Menu.PopUps.ReportDetailDialog
 import com.example.bantaycampus01.viewmodel.ReportViewModel
+import com.example.bantaycampus01.viewmodel.UserLatestAlert
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ReportHistoryScreen(
@@ -50,21 +53,21 @@ fun ReportHistoryScreen(
     val reportViewModel: ReportViewModel = viewModel()
     val screenScroll = rememberScrollState()
 
-    val reports = remember { mutableStateListOf<ReportModel>() }
+    val historyItems = remember { mutableStateListOf<UserLatestAlert>() }
 
-    var selectedReport by remember { mutableStateOf<ReportModel?>(null) }
+    var selectedItem by remember { mutableStateOf<UserLatestAlert?>(null) }
     var showDetails by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        reportViewModel.fetchUserReports(
-            onSuccess = { fetchedReports ->
-                reports.clear()
-                reports.addAll(fetchedReports)
+        reportViewModel.fetchUserHistory(
+            onSuccess = { fetchedHistory ->
+                historyItems.clear()
+                historyItems.addAll(fetchedHistory)
             },
             onFailure = {
                 Toast.makeText(
                     context,
-                    "Failed to load reports: ${it.message}",
+                    "Failed to load history: ${it.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -92,7 +95,7 @@ fun ReportHistoryScreen(
                 color = UserUI.DarkBlue
             )
 
-            if (reports.isEmpty()) {
+            if (historyItems.isEmpty()) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -107,7 +110,7 @@ fun ReportHistoryScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No reports found yet.",
+                            text = "No reports or SOS alerts found yet.",
                             color = UserUI.DarkBlue,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium
@@ -121,14 +124,24 @@ fun ReportHistoryScreen(
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    reports.forEach { report ->
+                    historyItems.forEach { item ->
                         HistoryItem(
-                            timeAgo = reportViewModel.getTimeAgo(report.createdAt),
-                            title = "🚨 ${report.incidentType}",
-                            location = "📍 ${report.location}",
-                            status = reportViewModel.getReadableStatus(report.status),
+                            timeAgo = reportViewModel.getTimeAgo(item.createdAt),
+                            title = if (item.isSos) {
+                                "🆘 ${item.category}"
+                            } else {
+                                "🚨 ${item.category}"
+                            },
+                            location = if (item.location.isNotBlank()) {
+                                "📍 ${item.location}"
+                            } else if (item.coordinates.isNotBlank()) {
+                                "📍 ${item.coordinates}"
+                            } else {
+                                "📍 No location provided"
+                            },
+                            status = reportViewModel.getReadableStatus(item.status),
                             onClick = {
-                                selectedReport = report
+                                selectedItem = item
                                 showDetails = true
                             }
                         )
@@ -145,29 +158,39 @@ fun ReportHistoryScreen(
 
         ReportDetailDialog(
             show = showDetails,
-            reportIdLabel = "Report ID: ${selectedReport?.reportId ?: "N/A"}",
-            statusLabel = selectedReport?.status ?: "Unknown",
-            statusColor = when ((selectedReport?.status ?: "").uppercase()) {
+            isSos = selectedItem?.isSos == true,
+            reportIdLabel = if (selectedItem?.isSos == true) {
+                "SOS ID: ${selectedItem?.reportId ?: "N/A"}"
+            } else {
+                "Report ID: ${selectedItem?.reportId ?: "N/A"}"
+            },
+            statusLabel = selectedItem?.status ?: "Unknown",
+            statusColor = when ((selectedItem?.status ?: "").uppercase()) {
                 "PENDING" -> Color(0xFFF4B400)
                 "RESPONDING" -> Color(0xFFFF9800)
                 "RESOLVED" -> Color(0xFF29C65E)
                 else -> Color.Gray
             },
-            category = "🚨 ${selectedReport?.incidentType ?: "N/A"}",
-            dateTime = selectedReport?.createdAt?.let {
-                java.text.SimpleDateFormat("MMM d, yyyy - h:mm a", java.util.Locale.getDefault()).format(java.util.Date(it))
+            category = if (selectedItem?.isSos == true) {
+                "🆘 ${selectedItem?.category ?: "SOS Alert"}"
+            } else {
+                "🚨 ${selectedItem?.category ?: "N/A"}"
+            },
+            dateTime = selectedItem?.createdAt?.let {
+                SimpleDateFormat("MMM d, yyyy - h:mm a", Locale.getDefault()).format(Date(it))
             } ?: "N/A",
-            location = selectedReport?.location ?: "N/A",
-            description = selectedReport?.description ?: "No description provided.",
+            location = selectedItem?.location ?: "",
+            description = selectedItem?.description ?: "No description provided.",
+            coordinates = selectedItem?.coordinates ?: "",
             hasAttachment = false,
             onViewAttachment = { },
             onMarkSafe = {
-                // optional later
+                // optional if you want to connect mark safe here later
             },
             onShowMarkedSafe = { },
             onDismiss = {
                 showDetails = false
-                selectedReport = null
+                selectedItem = null
             }
         )
     }

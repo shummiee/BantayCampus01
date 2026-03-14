@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,6 +27,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -55,7 +59,7 @@ import com.example.bantaycampus01.AppUtil
 import com.example.bantaycampus01.ui.theme.*
 import com.example.bantaycampus01.viewmodel.AuthViewModel
 import java.util.Calendar
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationScreen(
     modifier: Modifier = Modifier,
@@ -79,6 +83,9 @@ fun RegistrationScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
     var dob by remember { mutableStateOf("") }
+
+    val programs = listOf("JHS", "SHS", "ATYCB", "CAS", "CCIS", "CEA", "CHS", "SSO (Admin)")
+    var expanded by remember { mutableStateOf(false) }
 
     var isLoading by remember { mutableStateOf(false) }
 
@@ -177,10 +184,11 @@ fun RegistrationScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            //Contact Number
             SoftField(
                 value = contactNumber,
                 onValueChange = { contactNumber = it },
-                placeholder = "Enter Contact Number",
+                placeholder = "Enter Contact Number (09XX XXX XXXX)",
                 bg = fieldBg,
                 keyboardType = KeyboardType.Number,
                 isPassword = false,
@@ -189,6 +197,7 @@ fun RegistrationScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            //ID Number
             SoftField(
                 value = idNumber,
                 onValueChange = { idNumber = it },
@@ -201,15 +210,49 @@ fun RegistrationScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            SoftField(
-                value = department,
-                onValueChange = { department = it },
-                placeholder = "Enter Department",
-                bg = fieldBg,
-                keyboardType = KeyboardType.Text,
-                isPassword = false,
-                showPassword = true
-            )
+            //Department
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .background(fieldBg, RoundedCornerShape(14.dp))
+                    .clickable { expanded = true }
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text(
+                    text = if (department.isBlank()) "Select Program" else department,
+                    color = if (department.isBlank()) TextBoxPlaceholder else TextBoxText,
+                    fontSize = 13.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Dropdown arrow",
+                    tint = TextBoxText,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                )
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier
+                        .width(270.dp)
+                        .height(235.dp)
+                        .background(fieldBg)
+                ) {
+                    programs.forEach { program ->
+                        DropdownMenuItem(
+                            text = { Text(program, fontSize = 13.sp, color = TextBoxText) },
+                            onClick = {
+                                department = program
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -260,6 +303,7 @@ fun RegistrationScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            //Birth Date
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -286,17 +330,70 @@ fun RegistrationScreen(
 
             Button(
                 onClick = {
-                    isLoading = true
+                    focusManager.clearFocus()
 
+                    // --- Validation ---
+                    when {
+                        name.isBlank() -> {
+                            AppUtil.showToast(context, "Please enter your full name")
+                            return@Button
+                        }
+                        email.isBlank() -> {
+                            AppUtil.showToast(context, "Please enter your email")
+                            return@Button
+                        }
+                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                            AppUtil.showToast(context, "Please enter a valid email address")
+                            return@Button
+                        }
+                        contactNumber.isBlank() -> {
+                            AppUtil.showToast(context, "Please enter your contact number")
+                            return@Button
+                        }
+                        contactNumber.length != 11 || !contactNumber.all { it.isDigit() } -> {
+                            AppUtil.showToast(context, "Contact number must be 11 digits")
+                            return@Button
+                        }
+                        idNumber.isBlank() -> {
+                            AppUtil.showToast(context, "Please enter your ID number")
+                            return@Button
+                        }
+                        !idNumber.startsWith("20") -> {
+                            AppUtil.showToast(context, "ID number must start with 20")
+                            return@Button
+                        }
+                        department.isBlank() -> {
+                            AppUtil.showToast(context, "Please select your program")
+                            return@Button
+                        }
+                        dob.isBlank() -> {
+                            AppUtil.showToast(context, "Please select your birthdate")
+                            return@Button
+                        }
+                        password.isBlank() -> {
+                            AppUtil.showToast(context, "Please enter a password")
+                            return@Button
+                        }
+                        confirmPassword.isBlank() -> {
+                            AppUtil.showToast(context, "Please confirm your password")
+                            return@Button
+                        }
+                        password != confirmPassword -> {
+                            AppUtil.showToast(context, "Passwords do not match")
+                            return@Button
+                        }
+                    }
+
+                    // --- All validations passed, call register ---
+                    isLoading = true
                     authViewModel.register(email, name, contactNumber, idNumber, department, dob, role, password) { success, errorMessage ->
+                        isLoading = false
                         if (success) {
-                            isLoading = false
+                            Toast.makeText(context, "Account Created", Toast.LENGTH_SHORT).show()
                             navController.navigate("Login_Screen") {
                                 popUpTo("Registration_Screen") { inclusive = true }
                             }
-                            Toast.makeText(context, "Account Created", Toast.LENGTH_SHORT).show()
                         } else {
-                            isLoading = false
                             AppUtil.showToast(context, errorMessage ?: "Something went wrong")
                         }
                     }

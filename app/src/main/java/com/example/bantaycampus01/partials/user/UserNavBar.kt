@@ -15,7 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.bantaycampus01.R
-import com.example.bantaycampus01.screens.User.PopUps.UserSosConfirmDialog
+import com.example.bantaycampus01.screens.user.popups.UserSosConfirmDialog
 import com.example.bantaycampus01.ui.theme.DarkGrayBlue
 
 @Composable

@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +72,7 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
@@ -102,6 +106,7 @@ fun LoginScreen(
                 .imePadding()
                 .padding(top = 180.dp)
                 .background(White)
+                .verticalScroll(scrollState)
                 .padding(horizontal = 30.dp)
                 .padding(top = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -176,7 +181,8 @@ fun LoginScreen(
                     text = error!!,
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -202,14 +208,30 @@ fun LoginScreen(
                                 navController.navigate("AdminHomepage_Screen") {
                                     popUpTo("Login_Screen") { inclusive = true }
                                 }
+                                AppUtil.showToast(context, "Login successful!")
                             } else {
                                 navController.navigate("UserHomePage_Screen") {
                                     popUpTo("Login_Screen") { inclusive = true }
                                 }
+                                AppUtil.showToast(context, "Login successful!")
                             }
                         } else {
-                            error = errorMessage ?: "Login failed"
-                            AppUtil.showToast(context, errorMessage ?: "Login Failed")
+                            val friendlyMessage = when {
+                                errorMessage?.contains("no user record", true) == true ->
+                                    "Account does not exist." //FUNCTIONING BUT NOT READING THIS ERROR PROPERLY
+
+                                errorMessage?.contains("password", true) == true ->
+                                    "Incorrect email or password."
+
+                                errorMessage?.contains("badly formatted", true) == true ||
+                                        errorMessage?.contains("invalid email", true) == true ->
+                                    "Invalid email format."
+
+                                else -> "Login failed. Please try again."
+                            }
+
+                            error = friendlyMessage
+                            AppUtil.showToast(context, friendlyMessage)
                         }
                     }
                 },
